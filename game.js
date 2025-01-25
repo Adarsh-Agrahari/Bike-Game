@@ -33,21 +33,34 @@ let gameOver = false;
 
 // Joystick properties
 const joystick = {
-	x: 200,
-	y: canvas.height - 200,
+	x: 100,
+	y: canvas.height - 100,
 	radius: 50,
-	knob: { x: 100, y: canvas.height - 200, radius: 20 },
+	knob: { x: 100, y: canvas.height - 100, radius: 20 },
 	isDragging: false,
 };
 
 // Track joystick direction
 let joystickDirection = { x: 0, y: 0 };
 
+// Function to get canvas position
+function getCanvasPosition() {
+	const rect = canvas.getBoundingClientRect();
+	return {
+		left: rect.left,
+		top: rect.top,
+	};
+}
+
 // Handle touch events for the joystick
 canvas.addEventListener("touchstart", (e) => {
 	const touch = e.touches[0];
-	const dx = touch.clientX - joystick.x;
-	const dy = touch.clientY - joystick.y;
+	const canvasPos = getCanvasPosition();
+	const touchX = touch.clientX - canvasPos.left;
+	const touchY = touch.clientY - canvasPos.top;
+
+	const dx = touchX - joystick.x;
+	const dy = touchY - joystick.y;
 	if (Math.sqrt(dx * dx + dy * dy) < joystick.radius) {
 		joystick.isDragging = true;
 	}
@@ -57,8 +70,12 @@ canvas.addEventListener("touchmove", (e) => {
 	if (!joystick.isDragging) return;
 
 	const touch = e.touches[0];
-	const dx = touch.clientX - joystick.x;
-	const dy = touch.clientY - joystick.y;
+	const canvasPos = getCanvasPosition();
+	const touchX = touch.clientX - canvasPos.left;
+	const touchY = touch.clientY - canvasPos.top;
+
+	const dx = touchX - joystick.x;
+	const dy = touchY - joystick.y;
 	const distance = Math.sqrt(dx * dx + dy * dy);
 	const maxDistance = joystick.radius;
 
@@ -67,8 +84,8 @@ canvas.addEventListener("touchmove", (e) => {
 		joystick.knob.x = joystick.x + maxDistance * Math.cos(angle);
 		joystick.knob.y = joystick.y + maxDistance * Math.sin(angle);
 	} else {
-		joystick.knob.x = touch.clientX;
-		joystick.knob.y = touch.clientY;
+		joystick.knob.x = touchX;
+		joystick.knob.y = touchY;
 	}
 
 	// Calculate direction
