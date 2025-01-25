@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #121212;
+  /* Dark background */
+  color: #ffffff;
+  /* Light text color */
+  font-family: Arial, sans-serif;
+}
+
+canvas {
+  border: 2px solid #333;
+  /* Darker border */
+  background-color: #1e1e1e;
+  /* Dark canvas background */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* Subtle shadow */
+}
