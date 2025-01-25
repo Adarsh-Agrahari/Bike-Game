@@ -178,6 +178,7 @@ function update() {
 		// Remove obstacles that are off-screen
 		if (obstacles[i].y > canvas.height) {
 			obstacles.splice(i, 1);
+			continue; // Skip collision check for removed obstacles
 		}
 
 		// Check for collisions
