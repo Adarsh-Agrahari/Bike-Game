@@ -1,8 +1,20 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 600;
-canvas.height = 800;
+// Set initial canvas dimensions
+let canvasWidth = window.innerWidth;
+let canvasHeight = window.innerHeight;
+
+// Adjust canvas dimensions to fit the screen while maintaining aspect ratio
+const aspectRatio = 600 / 800; // Original aspect ratio of the game
+if (canvasWidth / canvasHeight > aspectRatio) {
+	canvasWidth = canvasHeight * aspectRatio;
+} else {
+	canvasHeight = canvasWidth / aspectRatio;
+}
+
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
 
 // Load images
 const playerImage = new Image();
@@ -15,8 +27,8 @@ carImage.src = "car.png"; // Path to the car image
 const bike = {
 	x: canvas.width / 2 - 25, // Centered horizontally
 	y: canvas.height - 100, // Positioned near the bottom
-	width: 50, // Adjusted width for better sizing
-	height: 90, // Adjusted height for better sizing
+	width: 50 * (canvasWidth / 600), // Scale width based on canvas size
+	height: 90 * (canvasHeight / 800), // Scale height based on canvas size
 	speed: 5,
 	velocityX: 0,
 	velocityY: 0,
@@ -24,8 +36,8 @@ const bike = {
 
 // Obstacle properties
 const obstacles = [];
-const obstacleWidth = 60; // Adjusted width for better sizing
-const obstacleHeight = 120; // Adjusted height for better sizing
+const obstacleWidth = 60 * (canvasWidth / 600); // Scale width based on canvas size
+const obstacleHeight = 120 * (canvasHeight / 800); // Scale height based on canvas size
 let obstacleSpeed = 3;
 let obstacleSpawnRate = 200; // Frames between obstacles
 let frameCount = 0;
@@ -33,10 +45,14 @@ let gameOver = false;
 
 // Joystick properties
 const joystick = {
-	x: 100,
-	y: canvas.height - 100,
-	radius: 50,
-	knob: { x: 100, y: canvas.height - 100, radius: 20 },
+	x: 100 * (canvasWidth / 600), // Scale position based on canvas size
+	y: canvas.height - 100 * (canvasHeight / 800), // Scale position based on canvas size
+	radius: 50 * (canvasWidth / 600), // Scale radius based on canvas size
+	knob: {
+		x: 100 * (canvasWidth / 600), // Scale position based on canvas size
+		y: canvas.height - 100 * (canvasHeight / 800), // Scale position based on canvas size
+		radius: 20 * (canvasWidth / 600), // Scale radius based on canvas size
+	},
 	isDragging: false,
 };
 
@@ -242,4 +258,36 @@ Promise.all([
 	}),
 ]).then(() => {
 	gameLoop();
+});
+
+// Handle window resize
+window.addEventListener("resize", () => {
+	// Recalculate canvas dimensions
+	canvasWidth = window.innerWidth;
+	canvasHeight = window.innerHeight;
+
+	if (canvasWidth / canvasHeight > aspectRatio) {
+		canvasWidth = canvasHeight * aspectRatio;
+	} else {
+		canvasHeight = canvasWidth / aspectRatio;
+	}
+
+	canvas.width = canvasWidth;
+	canvas.height = canvasHeight;
+
+	// Adjust game elements to new canvas size
+	bike.width = 50 * (canvasWidth / 600);
+	bike.height = 90 * (canvasHeight / 800);
+	bike.x = canvas.width / 2 - 25;
+	bike.y = canvas.height - 100;
+
+	obstacleWidth = 60 * (canvasWidth / 600);
+	obstacleHeight = 120 * (canvasHeight / 800);
+
+	joystick.x = 100 * (canvasWidth / 600);
+	joystick.y = canvas.height - 100 * (canvasHeight / 800);
+	joystick.radius = 50 * (canvasWidth / 600);
+	joystick.knob.x = joystick.x;
+	joystick.knob.y = joystick.y;
+	joystick.knob.radius = 20 * (canvasWidth / 600);
 });
