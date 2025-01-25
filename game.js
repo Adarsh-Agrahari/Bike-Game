@@ -28,33 +28,67 @@ const obstacleSpeed = 3;
 let obstacleSpawnRate = 200; // Frames between obstacles
 let frameCount = 0;
 
-// Keyboard input
-const keys = {
-	ArrowLeft: false,
-	ArrowRight: false,
+// Joystick properties
+const joystick = {
+	x: 100,
+	y: canvas.height - 100,
+	radius: 50,
+	knob: { x: 100, y: canvas.height - 100, radius: 20 },
+	isDragging: false,
 };
 
-document.addEventListener("keydown", (e) => {
-	if (e.key in keys) {
-		keys[e.key] = true;
+// Track joystick direction
+let joystickDirection = { x: 0, y: 0 };
+
+// Handle touch events for the joystick
+canvas.addEventListener("touchstart", (e) => {
+	const touch = e.touches[0];
+	const dx = touch.clientX - joystick.x;
+	const dy = touch.clientY - joystick.y;
+	if (Math.sqrt(dx * dx + dy * dy) < joystick.radius) {
+		joystick.isDragging = true;
 	}
 });
 
-document.addEventListener("keyup", (e) => {
-	if (e.key in keys) {
-		keys[e.key] = false;
+canvas.addEventListener("touchmove", (e) => {
+	if (!joystick.isDragging) return;
+
+	const touch = e.touches[0];
+	const dx = touch.clientX - joystick.x;
+	const dy = touch.clientY - joystick.y;
+	const distance = Math.sqrt(dx * dx + dy * dy);
+	const maxDistance = joystick.radius;
+
+	if (distance > maxDistance) {
+		const angle = Math.atan2(dy, dx);
+		joystick.knob.x = joystick.x + maxDistance * Math.cos(angle);
+		joystick.knob.y = joystick.y + maxDistance * Math.sin(angle);
+	} else {
+		joystick.knob.x = touch.clientX;
+		joystick.knob.y = touch.clientY;
 	}
+
+	// Calculate direction
+	joystickDirection.x = (joystick.knob.x - joystick.x) / maxDistance;
+	joystickDirection.y = (joystick.knob.y - joystick.y) / maxDistance;
+});
+
+canvas.addEventListener("touchend", () => {
+	joystick.isDragging = false;
+	joystick.knob.x = joystick.x;
+	joystick.knob.y = joystick.y;
+	joystickDirection = { x: 0, y: 0 };
 });
 
 // Update game state
 function update() {
-	// Move bike left and right
-	if (keys.ArrowLeft && bike.x > 0) {
-		bike.x -= bike.speed;
-	}
-	if (keys.ArrowRight && bike.x + bike.width < canvas.width) {
-		bike.x += bike.speed;
-	}
+	// Move bike based on joystick direction
+	bike.x += joystickDirection.x * bike.speed;
+	bike.y += joystickDirection.y * bike.speed;
+
+	// Constrain bike to canvas boundaries
+	bike.x = Math.max(0, Math.min(bike.x, canvas.width - bike.width));
+	bike.y = Math.max(0, Math.min(bike.y, canvas.height - bike.height));
 
 	// Spawn obstacles
 	if (frameCount % obstacleSpawnRate === 0) {
@@ -109,6 +143,25 @@ function render() {
 			obstacle.height
 		);
 	}
+
+	// Draw joystick
+	ctx.beginPath();
+	ctx.arc(joystick.x, joystick.y, joystick.radius, 0, Math.PI * 2);
+	ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+	ctx.fill();
+	ctx.closePath();
+
+	ctx.beginPath();
+	ctx.arc(
+		joystick.knob.x,
+		joystick.knob.y,
+		joystick.knob.radius,
+		0,
+		Math.PI * 2
+	);
+	ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+	ctx.fill();
+	ctx.closePath();
 }
 
 // Game loop
