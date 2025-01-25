@@ -18,15 +18,18 @@ const bike = {
 	width: 50, // Adjusted width for better sizing
 	height: 90, // Adjusted height for better sizing
 	speed: 5,
+	velocityX: 0,
+	velocityY: 0,
 };
 
 // Obstacle properties
 const obstacles = [];
 const obstacleWidth = 60; // Adjusted width for better sizing
 const obstacleHeight = 120; // Adjusted height for better sizing
-const obstacleSpeed = 3;
+let obstacleSpeed = 3;
 let obstacleSpawnRate = 200; // Frames between obstacles
 let frameCount = 0;
+let gameOver = false;
 
 // Joystick properties
 const joystick = {
@@ -80,11 +83,45 @@ canvas.addEventListener("touchend", () => {
 	joystickDirection = { x: 0, y: 0 };
 });
 
+// Keyboard controls
+const keys = {
+	ArrowLeft: false,
+	ArrowRight: false,
+	ArrowUp: false,
+	ArrowDown: false,
+};
+
+window.addEventListener("keydown", (e) => {
+	if (keys.hasOwnProperty(e.key)) {
+		keys[e.key] = true;
+	}
+});
+
+window.addEventListener("keyup", (e) => {
+	if (keys.hasOwnProperty(e.key)) {
+		keys[e.key] = false;
+	}
+});
+
 // Update game state
 function update() {
-	// Move bike based on joystick direction
-	bike.x += joystickDirection.x * bike.speed;
-	bike.y += joystickDirection.y * bike.speed;
+	if (gameOver) return;
+
+	// Move bike based on joystick direction or keyboard input
+	if (joystickDirection.x !== 0 || joystickDirection.y !== 0) {
+		bike.velocityX = joystickDirection.x * bike.speed;
+		bike.velocityY = joystickDirection.y * bike.speed;
+	} else {
+		bike.velocityX = 0;
+		bike.velocityY = 0;
+		if (keys.ArrowLeft) bike.velocityX = -bike.speed;
+		if (keys.ArrowRight) bike.velocityX = bike.speed;
+		if (keys.ArrowUp) bike.velocityY = -bike.speed;
+		if (keys.ArrowDown) bike.velocityY = bike.speed;
+	}
+
+	bike.x += bike.velocityX;
+	bike.y += bike.velocityY;
 
 	// Constrain bike to canvas boundaries
 	bike.x = Math.max(0, Math.min(bike.x, canvas.width - bike.width));
@@ -117,9 +154,16 @@ function update() {
 			bike.y < obstacles[i].y + obstacles[i].height &&
 			bike.y + bike.height > obstacles[i].y
 		) {
-			alert("Game Over!");
+			gameOver = true;
+			alert("Game Over! Press OK to restart.");
 			document.location.reload();
 		}
+	}
+
+	// Increase difficulty over time
+	if (frameCount % 1000 === 0) {
+		obstacleSpeed += 0.5;
+		obstacleSpawnRate = Math.max(50, obstacleSpawnRate - 10);
 	}
 
 	frameCount++;
@@ -168,7 +212,7 @@ function render() {
 function gameLoop() {
 	update();
 	render();
-	requestAnimationFrame(gameLoop);
+	if (!gameOver) requestAnimationFrame(gameLoop);
 }
 
 // Start the game after images are loaded
