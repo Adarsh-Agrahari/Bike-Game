@@ -36,7 +36,7 @@ const joystick = {
 	x: 200,
 	y: canvas.height - 200,
 	radius: 50,
-	knob: { x: 200, y: canvas.height - 200, radius: 20 },
+	knob: { x: 100, y: canvas.height - 200, radius: 20 },
 	isDragging: false,
 };
 
