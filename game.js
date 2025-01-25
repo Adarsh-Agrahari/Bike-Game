@@ -33,10 +33,10 @@ let gameOver = false;
 
 // Joystick properties
 const joystick = {
-	x: canvas.width/2,
-	y: canvas.height/2,
+	x: 200,
+	y: canvas.height - 200,
 	radius: 50,
-	knob: { x: canvas.width/2, y: canvas.height/2, radius: 20 },
+	knob: { x: 200, y: canvas.height - 200, radius: 20 },
 	isDragging: false,
 };
 
