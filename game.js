@@ -47,12 +47,12 @@ let gameOver = false;
 
 // Joystick properties
 const joystick = {
-  x: 100 * (canvasWidth / 600), // Scale position based on canvas size
-  y: canvas.height - 100 * (canvasWidth / 600), // Scale position based on canvas size
+  x: canvas.width - 150 * (canvasWidth / 600), // Scale position based on canvas size
+  y: canvas.height - 150 * (canvasWidth / 600), // Scale position based on canvas size
   radius: 50 * (canvasWidth / 600), // Scale radius based on canvas size
   knob: {
-    x: 100 * (canvasWidth / 600), // Scale position based on canvas size
-    y: canvas.height - 100 * (canvasWidth / 600), // Scale position based on canvas size
+    x: canvas.width - 150 * (canvasWidth / 600), // Scale position based on canvas size
+    y: canvas.height - 150 * (canvasWidth / 600), // Scale position based on canvas size
     radius: 20 * (canvasWidth / 600), // Scale radius based on canvas size
   },
   isDragging: false,
@@ -277,7 +277,7 @@ window.addEventListener("resize", () => {
   obstacleWidth = 60 * (canvasWidth / 600);
   obstacleHeight = 120 * (canvasWidth / 600); // Maintain aspect ratio based on width
 
-  joystick.x = 100 * (canvasWidth / 600);
+  joystick.x = canvas.width - 100 * (canvasWidth / 600);
   joystick.y = canvas.height - 100 * (canvasWidth / 600);
   joystick.radius = 50 * (canvasWidth / 600);
   joystick.knob.x = joystick.x;
