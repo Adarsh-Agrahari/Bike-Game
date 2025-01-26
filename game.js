@@ -55,14 +55,24 @@ let score = 0;
 let bestScore = localStorage.getItem("bestScore") || 0;
 
 // Police properties
-const police = {
-	x: canvas.width / 2 - 25, // Initial position
-	y: canvas.height, // Start below the canvas
-	width: 50 * (canvasWidth / 600), // Scale width based on canvas size
-	height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
-	speed: 1, // Police speed
-	isActive: false, // Police is inactive initially
-};
+const police = [
+	{
+		x: canvas.width / 2 - 25, // Initial position
+		y: canvas.height, // Start below the canvas
+		width: 50 * (canvasWidth / 600), // Scale width based on canvas size
+		height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
+		speed: 1, // Police speed
+		isActive: false, // Police is inactive initially
+	},
+	{
+		x: canvas.width / 2 - 25, // Initial position
+		y: canvas.height, // Start below the canvas
+		width: 50 * (canvasWidth / 600), // Scale width based on canvas size
+		height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
+		speed: 1, // Police speed
+		isActive: false, // Police is inactive initially
+	},
+];
 
 // Joystick properties
 const joystick = {
@@ -225,45 +235,60 @@ function update() {
 		}
 	}
 
-	// Spawn police when score reaches 100
-	if (score >= 20 && !police.isActive) {
-		police.isActive = true;
-		police.x = Math.random() * (canvas.width - police.width); // Random horizontal position
-		police.y = canvas.height; // Start below the canvas
+	// Spawn first police when score reaches 20
+	if (score >= 20 && !police[0].isActive) {
+		police[0].isActive = true;
+		police[0].x = Math.random() * (canvas.width - police[0].width); // Random horizontal position
+		police[0].y = canvas.height; // Start below the canvas
+	}
+
+	// Increase speed of first police when score reaches 50
+	if (score >= 50) {
+		police[0].speed = 2;
+	}
+
+	// Spawn second police when score reaches 100
+	if (score >= 100 && !police[1].isActive) {
+		police[1].isActive = true;
+		police[1].x = Math.random() * (canvas.width - police[1].width); // Random horizontal position
+		police[1].y = canvas.height; // Start below the canvas
 	}
 
 	// Move police if active
-	if (police.isActive) {
-		// Calculate direction towards the player
-		const dx = bike.x - police.x;
-		const dy = bike.y - police.y;
-		const distance = Math.sqrt(dx * dx + dy * dy);
+	for (let i = 0; i < police.length; i++) {
+		if (police[i].isActive) {
+			// Calculate direction towards the player
+			const dx = bike.x - police[i].x;
+			const dy = bike.y - police[i].y;
+			const distance = Math.sqrt(dx * dx + dy * dy);
 
-		// Normalize direction
-		if (distance > 0) {
-			police.x += (dx / distance) * police.speed;
-			police.y += (dy / distance) * police.speed;
-		}
+			// Normalize direction
+			if (distance > 0) {
+				police[i].x += (dx / distance) * police[i].speed;
+				police[i].y += (dy / distance) * police[i].speed;
+			}
 
-		// Avoid collision with cars
-		for (const obstacle of obstacles) {
-			if (checkCollision(police, obstacle)) {
-				// Adjust police position to avoid collision
-				if (police.x < obstacle.x) {
-					police.x -= police.speed; // Move left
-				} else {
-					police.x += police.speed; // Move right
+			// Avoid collision with cars
+			for (const obstacle of obstacles) {
+				if (checkCollision(police[i], obstacle)) {
+					// Adjust police position to avoid collision
+					if (police[i].x < obstacle.x) {
+						police[i].x -= police[i].speed; // Move left
+					} else {
+						police[i].x += police[i].speed; // Move right
+					}
 				}
 			}
-		}
 
-		// Check for collision with player
-		if (checkCollision(bike, police)) {
-			gameOver = true;
-			document.getElementById("restartButton").style.display = "block";
-			if (score > bestScore) {
-				bestScore = score;
-				localStorage.setItem("bestScore", bestScore); // Save best score
+			// Check for collision with player
+			if (checkCollision(bike, police[i])) {
+				gameOver = true;
+				document.getElementById("restartButton").style.display =
+					"block";
+				if (score > bestScore) {
+					bestScore = score;
+					localStorage.setItem("bestScore", bestScore); // Save best score
+				}
 			}
 		}
 	}
@@ -297,14 +322,16 @@ function render() {
 	}
 
 	// Draw police if active
-	if (police.isActive) {
-		ctx.drawImage(
-			policeImage,
-			police.x,
-			police.y,
-			police.width,
-			police.height
-		);
+	for (let i = 0; i < police.length; i++) {
+		if (police[i].isActive) {
+			ctx.drawImage(
+				policeImage,
+				police[i].x,
+				police[i].y,
+				police[i].width,
+				police[i].height
+			);
+		}
 	}
 
 	// Draw joystick
@@ -404,7 +431,8 @@ document.getElementById("playButton").addEventListener("click", () => {
 	obstacles.length = 0; // Clear obstacles
 	frameCount = 0; // Reset frame count
 	score = 0; // Reset score
-	police.isActive = false; // Reset police
+	police[0].isActive = false; // Reset police
+	police[1].isActive = false; // Reset police
 	bike.x = canvas.width / 2 - 25; // Reset bike position
 	bike.y = canvas.height - 100;
 	gameLoop(); // Start the game loop
