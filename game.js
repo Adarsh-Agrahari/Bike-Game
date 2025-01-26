@@ -328,3 +328,29 @@ document.getElementById("playButton").addEventListener("click", () => {
 document.getElementById("restartButton").addEventListener("click", () => {
 	document.location.reload();
 });
+
+// Full-screen button functionality
+const gameContainer = document.getElementById("gameContainer");
+
+document.getElementById("fullScreenButton").addEventListener("click", () => {
+	if (!document.fullscreenElement) {
+		gameContainer.requestFullscreen().catch((err) => {
+			alert(`Error entering full-screen: ${err.message}`);
+		});
+	} else {
+		document.exitFullscreen();
+	}
+});
+
+// Handle full-screen change events
+document.addEventListener("fullscreenchange", () => {
+	if (document.fullscreenElement) {
+		// Force canvas redraw
+		setTimeout(() => {
+			canvas.width = canvasWidth;
+			canvas.height = canvasHeight;
+			bike.x = canvas.width / 2 - 25;
+			bike.y = canvas.height - 100;
+		}, 100);
+	}
+});
