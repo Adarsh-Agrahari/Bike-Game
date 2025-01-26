@@ -27,6 +27,9 @@ carImages[0].src = "car1.png"; // Path to the first car image
 carImages[1].src = "car2.png"; // Path to the second car image
 carImages[2].src = "car3.png"; // Path to the third car image
 
+const policeImage = new Image();
+policeImage.src = "police.png"; // Path to the police image
+
 // Bike properties
 const bike = {
 	x: canvas.width / 2 - 25, // Centered horizontally
@@ -50,6 +53,16 @@ let gameOver = false;
 // Score variables
 let score = 0;
 let bestScore = localStorage.getItem("bestScore") || 0;
+
+// Police properties
+const police = {
+	x: canvas.width / 2 - 25, // Initial position
+	y: canvas.height, // Start below the canvas
+	width: 50 * (canvasWidth / 600), // Scale width based on canvas size
+	height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
+	speed: 1, // Police speed
+	isActive: false, // Police is inactive initially
+};
 
 // Joystick properties
 const joystick = {
@@ -144,6 +157,16 @@ window.addEventListener("keyup", (e) => {
 	}
 });
 
+// Function to check collision between two objects
+function checkCollision(obj1, obj2) {
+	return (
+		obj1.x + 10 < obj2.x + obj2.width &&
+		obj1.x + obj1.width > 10 + obj2.x &&
+		obj1.y + 10 < obj2.y + obj2.height &&
+		obj1.y + obj1.height > 10 + obj2.y
+	);
+}
+
 // Update game state
 function update() {
 	if (gameOver) return;
@@ -191,13 +214,51 @@ function update() {
 			continue;
 		}
 
-		// Check for collisions
-		if (
-			bike.x < obstacles[i].x + obstacles[i].width &&
-			bike.x + bike.width > obstacles[i].x &&
-			bike.y < obstacles[i].y + obstacles[i].height &&
-			bike.y + bike.height > obstacles[i].y
-		) {
+		// Check for collisions between bike and obstacles
+		if (checkCollision(bike, obstacles[i])) {
+			gameOver = true;
+			document.getElementById("restartButton").style.display = "block";
+			if (score > bestScore) {
+				bestScore = score;
+				localStorage.setItem("bestScore", bestScore); // Save best score
+			}
+		}
+	}
+
+	// Spawn police when score reaches 100
+	if (score >= 20 && !police.isActive) {
+		police.isActive = true;
+		police.x = Math.random() * (canvas.width - police.width); // Random horizontal position
+		police.y = canvas.height; // Start below the canvas
+	}
+
+	// Move police if active
+	if (police.isActive) {
+		// Calculate direction towards the player
+		const dx = bike.x - police.x;
+		const dy = bike.y - police.y;
+		const distance = Math.sqrt(dx * dx + dy * dy);
+
+		// Normalize direction
+		if (distance > 0) {
+			police.x += (dx / distance) * police.speed;
+			police.y += (dy / distance) * police.speed;
+		}
+
+		// Avoid collision with cars
+		for (const obstacle of obstacles) {
+			if (checkCollision(police, obstacle)) {
+				// Adjust police position to avoid collision
+				if (police.x < obstacle.x) {
+					police.x -= police.speed; // Move left
+				} else {
+					police.x += police.speed; // Move right
+				}
+			}
+		}
+
+		// Check for collision with player
+		if (checkCollision(bike, police)) {
 			gameOver = true;
 			document.getElementById("restartButton").style.display = "block";
 			if (score > bestScore) {
@@ -232,6 +293,17 @@ function render() {
 			obstacle.y,
 			obstacle.width,
 			obstacle.height
+		);
+	}
+
+	// Draw police if active
+	if (police.isActive) {
+		ctx.drawImage(
+			policeImage,
+			police.x,
+			police.y,
+			police.width,
+			police.height
 		);
 	}
 
@@ -282,6 +354,9 @@ Promise.all([
 	new Promise((resolve) => {
 		carImages[2].onload = resolve;
 	}),
+	new Promise((resolve) => {
+		policeImage.onload = resolve;
+	}),
 ]).then(() => {
 	document.getElementById("playButton").style.display = "block";
 });
@@ -329,6 +404,7 @@ document.getElementById("playButton").addEventListener("click", () => {
 	obstacles.length = 0; // Clear obstacles
 	frameCount = 0; // Reset frame count
 	score = 0; // Reset score
+	police.isActive = false; // Reset police
 	bike.x = canvas.width / 2 - 25; // Reset bike position
 	bike.y = canvas.height - 100;
 	gameLoop(); // Start the game loop
