@@ -63,6 +63,9 @@ const police = [
 		height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
 		speed: 1, // Police speed
 		isActive: false, // Police is inactive initially
+		isKicked: false, // Track if the police has been kicked
+		kickVelocityX: 0, // Velocity after being kicked
+		kickVelocityY: 0, // Velocity after being kicked
 	},
 	{
 		x: canvas.width / 2 - 25, // Initial position
@@ -71,6 +74,9 @@ const police = [
 		height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
 		speed: 1, // Police speed
 		isActive: false, // Police is inactive initially
+		isKicked: false, // Track if the police has been kicked
+		kickVelocityX: 0, // Velocity after being kicked
+		kickVelocityY: 0, // Velocity after being kicked
 	},
 ];
 
@@ -177,6 +183,38 @@ function checkCollision(obj1, obj2) {
 	);
 }
 
+// Add kick functionality
+document.getElementById("kickButton").addEventListener("click", () => {
+	if (gameOver) return;
+
+	// Check if any police is close enough to be kicked
+	for (let i = 0; i < police.length; i++) {
+		if (police[i].isActive) {
+			const dx = bike.x - police[i].x;
+			const dy = bike.y - police[i].y;
+			const distance = Math.sqrt(dx * dx + dy * dy);
+
+			// If the police is within a certain range, kick them
+			if (distance < 100) {
+				police[i].isKicked = true; // Mark the police as kicked
+
+				// Calculate the direction opposite to the police's movement
+				const oppositeDirectionX = -dx / distance;
+				const oppositeDirectionY = -dy / distance;
+
+				// Set a high speed for the kick (e.g., 15)
+				const kickSpeed = 15;
+
+				// Apply the opposite direction with high speed
+				police[i].kickVelocityX = oppositeDirectionX * kickSpeed;
+				police[i].kickVelocityY = oppositeDirectionY * kickSpeed;
+
+				score += 50; // Add bonus points for kicking the police
+			}
+		}
+	}
+});
+
 // Update game state
 function update() {
 	if (gameOver) return;
@@ -204,11 +242,11 @@ function update() {
 	// Spawn obstacles
 	if (frameCount % obstacleSpawnRate === 0) {
 		const obstacle = {
-			x: Math.random() * (canvas.width - obstacleWidth), // Random horizontal position
-			y: -obstacleHeight, // Start above the canvas
+			x: Math.random() * (canvas.width - obstacleWidth),
+			y: -obstacleHeight,
 			width: obstacleWidth,
 			height: obstacleHeight,
-			image: carImages[Math.floor(Math.random() * carImages.length)], // Randomly select a car image
+			image: carImages[Math.floor(Math.random() * carImages.length)],
 		};
 		obstacles.push(obstacle);
 	}
@@ -219,7 +257,7 @@ function update() {
 
 		// Remove obstacles that are off-screen and increment score
 		if (obstacles[i].y > canvas.height) {
-			score += 10; // Add 10 points for each obstacle passed
+			score += 10;
 			obstacles.splice(i, 1);
 			continue;
 		}
@@ -230,7 +268,7 @@ function update() {
 			document.getElementById("restartButton").style.display = "block";
 			if (score > bestScore) {
 				bestScore = score;
-				localStorage.setItem("bestScore", bestScore); // Save best score
+				localStorage.setItem("bestScore", bestScore);
 			}
 		}
 	}
@@ -238,8 +276,8 @@ function update() {
 	// Spawn first police when score reaches 20
 	if (score >= 20 && !police[0].isActive) {
 		police[0].isActive = true;
-		police[0].x = Math.random() * (canvas.width - police[0].width); // Random horizontal position
-		police[0].y = canvas.height; // Start below the canvas
+		police[0].x = Math.random() * (canvas.width - police[0].width);
+		police[0].y = canvas.height;
 	}
 
 	// Increase speed of first police when score reaches 50
@@ -250,44 +288,59 @@ function update() {
 	// Spawn second police when score reaches 100
 	if (score >= 100 && !police[1].isActive) {
 		police[1].isActive = true;
-		police[1].x = Math.random() * (canvas.width - police[1].width); // Random horizontal position
-		police[1].y = canvas.height; // Start below the canvas
+		police[1].x = Math.random() * (canvas.width - police[1].width);
+		police[1].y = canvas.height;
 	}
 
 	// Move police if active
 	for (let i = 0; i < police.length; i++) {
 		if (police[i].isActive) {
-			// Calculate direction towards the player
-			const dx = bike.x - police[i].x;
-			const dy = bike.y - police[i].y;
-			const distance = Math.sqrt(dx * dx + dy * dy);
+			if (police[i].isKicked) {
+				// If the police is kicked, move them in the opposite direction
+				police[i].x += police[i].kickVelocityX;
+				police[i].y += police[i].kickVelocityY;
 
-			// Normalize direction
-			if (distance > 0) {
-				police[i].x += (dx / distance) * police[i].speed;
-				police[i].y += (dy / distance) * police[i].speed;
-			}
+				// Deactivate the police if they go off-screen
+				if (
+					police[i].x < -police[i].width ||
+					police[i].x > canvas.width ||
+					police[i].y < -police[i].height ||
+					police[i].y > canvas.height
+				) {
+					police[i].isActive = false;
+					police[i].isKicked = false;
+				}
+			} else {
+				// Normal police movement towards the player
+				const dx = bike.x - police[i].x;
+				const dy = bike.y - police[i].y;
+				const distance = Math.sqrt(dx * dx + dy * dy);
 
-			// Avoid collision with cars
-			for (const obstacle of obstacles) {
-				if (checkCollision(police[i], obstacle)) {
-					// Adjust police position to avoid collision
-					if (police[i].x < obstacle.x) {
-						police[i].x -= police[i].speed; // Move left
-					} else {
-						police[i].x += police[i].speed; // Move right
+				if (distance > 0) {
+					police[i].x += (dx / distance) * police[i].speed;
+					police[i].y += (dy / distance) * police[i].speed;
+				}
+
+				// Avoid collision with cars
+				for (const obstacle of obstacles) {
+					if (checkCollision(police[i], obstacle)) {
+						if (police[i].x < obstacle.x) {
+							police[i].x -= police[i].speed;
+						} else {
+							police[i].x += police[i].speed;
+						}
 					}
 				}
-			}
 
-			// Check for collision with player
-			if (checkCollision(bike, police[i])) {
-				gameOver = true;
-				document.getElementById("restartButton").style.display =
-					"block";
-				if (score > bestScore) {
-					bestScore = score;
-					localStorage.setItem("bestScore", bestScore); // Save best score
+				// Check for collision with player
+				if (checkCollision(bike, police[i])) {
+					gameOver = true;
+					document.getElementById("restartButton").style.display =
+						"block";
+					if (score > bestScore) {
+						bestScore = score;
+						localStorage.setItem("bestScore", bestScore);
+					}
 				}
 			}
 		}
@@ -313,7 +366,7 @@ function render() {
 	// Draw obstacles
 	for (const obstacle of obstacles) {
 		ctx.drawImage(
-			obstacle.image, // Use the randomly selected car image
+			obstacle.image,
 			obstacle.x,
 			obstacle.y,
 			obstacle.width,

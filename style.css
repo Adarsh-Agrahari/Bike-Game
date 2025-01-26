@@ -50,7 +50,6 @@ canvas {
   position: absolute;
   top: 20px;
   right: 20px;
-  /* padding: 10px 20px; */
   font-size: 22px;
   background-color: transparent;
   color: white;
@@ -58,4 +57,23 @@ canvas {
   border-radius: 5px;
   cursor: pointer;
   z-index: 1000;
+}
+
+.kick-button {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  font-size: 18px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: background-color 0.3s;
+}
+
+.kick-button:hover {
+  background-color: #d32f2f;
 }
