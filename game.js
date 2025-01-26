@@ -189,8 +189,7 @@ function update() {
 			bike.y + bike.height > obstacles[i].y
 		) {
 			gameOver = true;
-			alert("Game Over! Press OK to restart.");
-			document.location.reload();
+			document.getElementById("restartButton").style.display = "block";
 		}
 	}
 
@@ -258,7 +257,7 @@ Promise.all([
 		carImage.onload = resolve;
 	}),
 ]).then(() => {
-	gameLoop();
+	document.getElementById("playButton").style.display = "block";
 });
 
 // Handle window resize
@@ -291,4 +290,14 @@ window.addEventListener("resize", () => {
 	joystick.knob.x = joystick.x;
 	joystick.knob.y = joystick.y;
 	joystick.knob.radius = 20 * (canvasWidth / 600);
+});
+
+// Event listeners for buttons
+document.getElementById("playButton").addEventListener("click", () => {
+	document.getElementById("playButton").style.display = "none";
+	gameLoop();
+});
+
+document.getElementById("restartButton").addEventListener("click", () => {
+	document.location.reload();
 });
