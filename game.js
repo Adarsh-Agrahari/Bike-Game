@@ -22,8 +22,10 @@ canvas.height = canvasHeight;
 const playerImage = new Image();
 playerImage.src = "player.png"; // Path to the bike image
 
-const carImage = new Image();
-carImage.src = "car.png"; // Path to the car image
+const carImages = [new Image(), new Image(), new Image()];
+carImages[0].src = "car1.png"; // Path to the first car image
+carImages[1].src = "car2.png"; // Path to the second car image
+carImages[2].src = "car3.png"; // Path to the third car image
 
 // Bike properties
 const bike = {
@@ -173,6 +175,7 @@ function update() {
 			y: -obstacleHeight, // Start above the canvas
 			width: obstacleWidth,
 			height: obstacleHeight,
+			image: carImages[Math.floor(Math.random() * carImages.length)], // Randomly select a car image
 		};
 		obstacles.push(obstacle);
 	}
@@ -224,7 +227,7 @@ function render() {
 	// Draw obstacles
 	for (const obstacle of obstacles) {
 		ctx.drawImage(
-			carImage,
+			obstacle.image, // Use the randomly selected car image
 			obstacle.x,
 			obstacle.y,
 			obstacle.width,
@@ -271,7 +274,13 @@ Promise.all([
 		playerImage.onload = resolve;
 	}),
 	new Promise((resolve) => {
-		carImage.onload = resolve;
+		carImages[0].onload = resolve;
+	}),
+	new Promise((resolve) => {
+		carImages[1].onload = resolve;
+	}),
+	new Promise((resolve) => {
+		carImages[2].onload = resolve;
 	}),
 ]).then(() => {
 	document.getElementById("playButton").style.display = "block";
