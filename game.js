@@ -186,10 +186,18 @@ function checkCollision(obj1, obj2) {
 	);
 }
 
-// Add kick functionality
-document.getElementById("kickButton").addEventListener("click", () => {
-	if (gameOver) return;
+// Add kick functionality with cooldown
+let kickButtonCooldown = false;
 
+document.getElementById("kickButton").addEventListener("click", () => {
+	if (gameOver || kickButtonCooldown) return;
+
+	// Disable the button and start cooldown
+	kickButtonCooldown = true;
+	const kickButton = document.getElementById("kickButton");
+	kickButton.classList.add("disabled");
+
+	// Perform the kick functionality
 	for (let i = 0; i < police.length; i++) {
 		if (police[i].isActive && !police[i].attachedToCar) {
 			const dx = bike.x - police[i].x;
@@ -207,6 +215,12 @@ document.getElementById("kickButton").addEventListener("click", () => {
 			}
 		}
 	}
+
+	// Re-enable the button after 1 second
+	setTimeout(() => {
+		kickButtonCooldown = false;
+		kickButton.classList.remove("disabled");
+	}, 1000);
 });
 
 // Update game state

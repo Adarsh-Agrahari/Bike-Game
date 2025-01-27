@@ -60,20 +60,31 @@ canvas {
 }
 
 .kick-button {
+  width: 80px;
+  height: 80px;
   position: absolute;
   bottom: 20px;
   left: 20px;
   padding: 10px 20px;
   font-size: 18px;
-  background-color: #f44336;
-  color: white;
+  background: rgba(255, 215, 0, 0.2);
+  border: 2px solid #ffd700;
+  color: #ffd700;
   border: none;
-  border-radius: 5px;
+  border-radius: 50%;
   cursor: pointer;
   z-index: 1000;
   transition: background-color 0.3s;
 }
 
-.kick-button:hover {
-  background-color: #d32f2f;
+.kick-button.touched {
+  background: rgba(255, 215, 0, 0.4);
+  transform: translate3d(0, 0, 0) scale(0.95);
+}
+
+.kick-button.disabled {
+  opacity: 0.5;
+  border-color: rgba(255, 215, 0, 0.5);
+  background: rgba(255, 215, 0, 0.1);
+  pointer-events: none;
 }
