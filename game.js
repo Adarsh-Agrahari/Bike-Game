@@ -84,11 +84,11 @@ const police = [
 const joystick = {
 	x: canvas.width - 150 * (canvasWidth / 600), // Scale position based on canvas size
 	y: canvas.height - 150 * (canvasWidth / 600), // Scale position based on canvas size
-	radius: 50 * (canvasWidth / 600), // Scale radius based on canvas size
+	radius: 80 * (canvasWidth / 600), // Scale radius based on canvas size
 	knob: {
 		x: canvas.width - 150 * (canvasWidth / 600), // Scale position based on canvas size
 		y: canvas.height - 150 * (canvasWidth / 600), // Scale position based on canvas size
-		radius: 20 * (canvasWidth / 600), // Scale radius based on canvas size
+		radius: 30 * (canvasWidth / 600), // Scale radius based on canvas size
 	},
 	isDragging: false,
 };
@@ -390,7 +390,7 @@ function render() {
 	// Draw joystick
 	ctx.beginPath();
 	ctx.arc(joystick.x, joystick.y, joystick.radius, 0, Math.PI * 2);
-	ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+	ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
 	ctx.fill();
 	ctx.closePath();
 
@@ -402,7 +402,7 @@ function render() {
 		0,
 		Math.PI * 2
 	);
-	ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+	ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
 	ctx.fill();
 	ctx.closePath();
 
