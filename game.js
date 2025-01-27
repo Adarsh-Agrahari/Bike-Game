@@ -581,7 +581,16 @@ document.getElementById("playButton").addEventListener("click", () => {
 });
 
 document.getElementById("restartButton").addEventListener("click", () => {
-	document.location.reload();
+	document.getElementById("restartButton").style.display = "none";
+	gameOver = false;
+	obstacles.length = 0;
+	frameCount = 0;
+	score = 0;
+	police[0].isActive = false;
+	police[1].isActive = false;
+	bike.x = canvas.width / 2 - 25;
+	bike.y = canvas.height - 100;
+	gameLoop();
 });
 
 // Full-screen button functionality
