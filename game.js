@@ -20,22 +20,22 @@ canvas.height = canvasHeight;
 
 // Load images
 const playerImage = new Image();
-playerImage.src = "player.png"; // Path to the bike image
+playerImage.src = "player.png";
 
 const carImages = [new Image(), new Image(), new Image()];
-carImages[0].src = "car1.png"; // Path to the first car image
-carImages[1].src = "car2.png"; // Path to the second car image
-carImages[2].src = "car3.png"; // Path to the third car image
+carImages[0].src = "car1.png";
+carImages[1].src = "car2.png";
+carImages[2].src = "car3.png";
 
 const policeImage = new Image();
-policeImage.src = "police.png"; // Path to the police image
+policeImage.src = "police.png";
 
 // Bike properties
 const bike = {
-	x: canvas.width / 2 - 25, // Centered horizontally
-	y: canvas.height - 100, // Positioned near the bottom
-	width: 50 * (canvasWidth / 600), // Scale width based on canvas size
-	height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
+	x: canvas.width / 2 - 25,
+	y: canvas.height - 100,
+	width: 50 * (canvasWidth / 600),
+	height: 90 * (canvasWidth / 600),
 	speed: 5,
 	velocityX: 0,
 	velocityY: 0,
@@ -43,10 +43,10 @@ const bike = {
 
 // Obstacle properties
 const obstacles = [];
-const obstacleWidth = 60 * (canvasWidth / 600); // Scale width based on canvas size
-const obstacleHeight = 120 * (canvasWidth / 600); // Scale height based on width to maintain aspect ratio
+const obstacleWidth = 60 * (canvasWidth / 600);
+const obstacleHeight = 120 * (canvasWidth / 600);
 let obstacleSpeed = 3;
-let obstacleSpawnRate = 200; // Frames between obstacles
+let obstacleSpawnRate = 200;
 let frameCount = 0;
 let gameOver = false;
 
@@ -57,38 +57,42 @@ let bestScore = localStorage.getItem("bestScore") || 0;
 // Police properties
 const police = [
 	{
-		x: canvas.width / 2 - 25, // Initial position
-		y: canvas.height, // Start below the canvas
-		width: 50 * (canvasWidth / 600), // Scale width based on canvas size
-		height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
-		speed: 1, // Police speed
-		isActive: false, // Police is inactive initially
-		isKicked: false, // Track if the police has been kicked
-		kickVelocityX: 0, // Velocity after being kicked
-		kickVelocityY: 0, // Velocity after being kicked
+		x: canvas.width / 2 - 25,
+		y: canvas.height,
+		width: 50 * (canvasWidth / 600),
+		height: 90 * (canvasWidth / 600),
+		speed: 1,
+		isActive: false,
+		isKicked: false,
+		kickVelocityX: 0,
+		kickVelocityY: 0,
+		attachedToCar: false,
+		attachedCarIndex: -1,
 	},
 	{
-		x: canvas.width / 2 - 25, // Initial position
-		y: canvas.height, // Start below the canvas
-		width: 50 * (canvasWidth / 600), // Scale width based on canvas size
-		height: 90 * (canvasWidth / 600), // Scale height based on width to maintain aspect ratio
-		speed: 1, // Police speed
-		isActive: false, // Police is inactive initially
-		isKicked: false, // Track if the police has been kicked
-		kickVelocityX: 0, // Velocity after being kicked
-		kickVelocityY: 0, // Velocity after being kicked
+		x: canvas.width / 2 - 25,
+		y: canvas.height,
+		width: 50 * (canvasWidth / 600),
+		height: 90 * (canvasWidth / 600),
+		speed: 1,
+		isActive: false,
+		isKicked: false,
+		kickVelocityX: 0,
+		kickVelocityY: 0,
+		attachedToCar: false,
+		attachedCarIndex: -1,
 	},
 ];
 
 // Joystick properties
 const joystick = {
-	x: canvas.width - 150 * (canvasWidth / 600), // Scale position based on canvas size
-	y: canvas.height - 150 * (canvasWidth / 600), // Scale position based on canvas size
-	radius: 80 * (canvasWidth / 600), // Scale radius based on canvas size
+	x: canvas.width - 150 * (canvasWidth / 600),
+	y: canvas.height - 150 * (canvasWidth / 600),
+	radius: 80 * (canvasWidth / 600),
 	knob: {
-		x: canvas.width - 150 * (canvasWidth / 600), // Scale position based on canvas size
-		y: canvas.height - 150 * (canvasWidth / 600), // Scale position based on canvas size
-		radius: 30 * (canvasWidth / 600), // Scale radius based on canvas size
+		x: canvas.width - 150 * (canvasWidth / 600),
+		y: canvas.height - 150 * (canvasWidth / 600),
+		radius: 30 * (canvasWidth / 600),
 	},
 	isDragging: false,
 };
@@ -141,7 +145,6 @@ canvas.addEventListener("touchmove", (e) => {
 		joystick.knob.y = touchY;
 	}
 
-	// Calculate direction
 	joystickDirection.x = (joystick.knob.x - joystick.x) / maxDistance;
 	joystickDirection.y = (joystick.knob.y - joystick.y) / maxDistance;
 });
@@ -187,29 +190,20 @@ function checkCollision(obj1, obj2) {
 document.getElementById("kickButton").addEventListener("click", () => {
 	if (gameOver) return;
 
-	// Check if any police is close enough to be kicked
 	for (let i = 0; i < police.length; i++) {
-		if (police[i].isActive) {
+		if (police[i].isActive && !police[i].attachedToCar) {
 			const dx = bike.x - police[i].x;
 			const dy = bike.y - police[i].y;
 			const distance = Math.sqrt(dx * dx + dy * dy);
 
-			// If the police is within a certain range, kick them
 			if (distance < 100) {
-				police[i].isKicked = true; // Mark the police as kicked
-
-				// Calculate the direction opposite to the police's movement
+				police[i].isKicked = true;
 				const oppositeDirectionX = -dx / distance;
 				const oppositeDirectionY = -dy / distance;
-
-				// Set a high speed for the kick (e.g., 15)
 				const kickSpeed = 15;
-
-				// Apply the opposite direction with high speed
 				police[i].kickVelocityX = oppositeDirectionX * kickSpeed;
 				police[i].kickVelocityY = oppositeDirectionY * kickSpeed;
-
-				score += 50; // Add bonus points for kicking the police
+				score += 50;
 			}
 		}
 	}
@@ -258,6 +252,17 @@ function update() {
 		// Remove obstacles that are off-screen and increment score
 		if (obstacles[i].y > canvas.height) {
 			score += 10;
+
+			// Check if any police were attached to this obstacle
+			for (let p = 0; p < police.length; p++) {
+				if (police[p].attachedCarIndex === i) {
+					police[p].isActive = false;
+					police[p].attachedToCar = false;
+					police[p].attachedCarIndex = -1;
+					score += 25; // Bonus points for police going off screen
+				}
+			}
+
 			obstacles.splice(i, 1);
 			continue;
 		}
@@ -309,6 +314,18 @@ function update() {
 				) {
 					police[i].isActive = false;
 					police[i].isKicked = false;
+					police[i].attachedToCar = false;
+					police[i].attachedCarIndex = -1;
+				}
+			} else if (police[i].attachedToCar) {
+				// If police is attached to a car, move with it
+				if (
+					police[i].attachedCarIndex >= 0 &&
+					police[i].attachedCarIndex < obstacles.length
+				) {
+					const attachedCar = obstacles[police[i].attachedCarIndex];
+					police[i].y = attachedCar.y;
+					police[i].x = attachedCar.x;
 				}
 			} else {
 				// Normal police movement towards the player
@@ -321,19 +338,22 @@ function update() {
 					police[i].y += (dy / distance) * police[i].speed;
 				}
 
-				// Avoid collision with cars
-				for (const obstacle of obstacles) {
-					if (checkCollision(police[i], obstacle)) {
-						if (police[i].x < obstacle.x) {
-							police[i].x -= police[i].speed;
-						} else {
-							police[i].x += police[i].speed;
-						}
+				// Check for collision with cars
+				for (let j = 0; j < obstacles.length; j++) {
+					if (checkCollision(police[i], obstacles[j])) {
+						police[i].attachedToCar = true;
+						police[i].attachedCarIndex = j;
+						police[i].x = obstacles[j].x;
+						police[i].y = obstacles[j].y;
+						break;
 					}
 				}
 
-				// Check for collision with player
-				if (checkCollision(bike, police[i])) {
+				// Only check for collision with player if police is not attached to a car
+				if (
+					!police[i].attachedToCar &&
+					checkCollision(bike, police[i])
+				) {
 					gameOver = true;
 					document.getElementById("restartButton").style.display =
 						"block";
@@ -377,13 +397,34 @@ function render() {
 	// Draw police if active
 	for (let i = 0; i < police.length; i++) {
 		if (police[i].isActive) {
-			ctx.drawImage(
-				policeImage,
-				police[i].x,
-				police[i].y,
-				police[i].width,
-				police[i].height
-			);
+			ctx.save();
+
+			if (police[i].attachedToCar) {
+				// Rotate the police when attached to car
+				ctx.translate(
+					police[i].x + police[i].width / 2,
+					police[i].y + police[i].height / 2
+				);
+				// ctx.rotate(Math.PI / 2); // Rotate 90 degrees
+				ctx.drawImage(
+					policeImage,
+					-police[i].width / 2,
+					-police[i].height / 2,
+					police[i].width,
+					police[i].height
+				);
+			} else {
+				// Draw normally if not attached
+				ctx.drawImage(
+					policeImage,
+					police[i].x,
+					police[i].y,
+					police[i].width,
+					police[i].height
+				);
+			}
+
+			ctx.restore();
 		}
 	}
 
@@ -448,7 +489,7 @@ window.addEventListener("resize", () => {
 	canvasHeight = window.innerHeight;
 
 	if (canvasWidth > 700) {
-		const aspectRatio = 600 / 800; // Original aspect ratio of the game
+		const aspectRatio = 600 / 800;
 		if (canvasWidth / canvasHeight > aspectRatio) {
 			canvasWidth = canvasHeight * aspectRatio;
 		} else {
@@ -461,34 +502,38 @@ window.addEventListener("resize", () => {
 
 	// Adjust game elements to new canvas size
 	bike.width = 50 * (canvasWidth / 600);
-	bike.height = 90 * (canvasWidth / 600); // Maintain aspect ratio based on width
+	bike.height = 90 * (canvasWidth / 600);
 	bike.x = canvas.width / 2 - 25;
 	bike.y = canvas.height - 100;
 
-	obstacleWidth = 60 * (canvasWidth / 600);
-	obstacleHeight = 120 * (canvasWidth / 600); // Maintain aspect ratio based on width
-
-	joystick.x = 100 * (canvasWidth / 600);
-	joystick.y = canvas.height - 100 * (canvasWidth / 600);
-	joystick.radius = 50 * (canvasWidth / 600);
+	// Update joystick position
+	joystick.x = canvas.width - 150 * (canvasWidth / 600);
+	joystick.y = canvas.height - 150 * (canvasWidth / 600);
+	joystick.radius = 80 * (canvasWidth / 600);
 	joystick.knob.x = joystick.x;
 	joystick.knob.y = joystick.y;
-	joystick.knob.radius = 20 * (canvasWidth / 600);
+	joystick.knob.radius = 30 * (canvasWidth / 600);
+
+	// Update police dimensions
+	for (let i = 0; i < police.length; i++) {
+		police[i].width = 50 * (canvasWidth / 600);
+		police[i].height = 90 * (canvasWidth / 600);
+	}
 });
 
 // Event listeners for buttons
 document.getElementById("playButton").addEventListener("click", () => {
 	document.getElementById("playButton").style.display = "none";
-	document.getElementById("restartButton").style.display = "none"; // Hide restart button if visible
-	gameOver = false; // Reset game over state
-	obstacles.length = 0; // Clear obstacles
-	frameCount = 0; // Reset frame count
-	score = 0; // Reset score
-	police[0].isActive = false; // Reset police
-	police[1].isActive = false; // Reset police
-	bike.x = canvas.width / 2 - 25; // Reset bike position
+	document.getElementById("restartButton").style.display = "none";
+	gameOver = false;
+	obstacles.length = 0;
+	frameCount = 0;
+	score = 0;
+	police[0].isActive = false;
+	police[1].isActive = false;
+	bike.x = canvas.width / 2 - 25;
 	bike.y = canvas.height - 100;
-	gameLoop(); // Start the game loop
+	gameLoop();
 });
 
 document.getElementById("restartButton").addEventListener("click", () => {
@@ -511,7 +556,6 @@ document.getElementById("fullScreenButton").addEventListener("click", () => {
 // Handle full-screen change events
 document.addEventListener("fullscreenchange", () => {
 	if (document.fullscreenElement) {
-		// Force canvas redraw
 		setTimeout(() => {
 			canvas.width = canvasWidth;
 			canvas.height = canvasHeight;
