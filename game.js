@@ -4,6 +4,7 @@ const ctx = canvas.getContext("2d");
 // Set initial canvas dimensions
 let canvasWidth = window.innerWidth;
 let canvasHeight = window.innerHeight;
+let lineOffset = 0; // Controls the vertical position of the dashed line
 
 // Adjust canvas dimensions to fit the screen while maintaining aspect ratio
 if (canvasWidth > 700) {
@@ -53,6 +54,10 @@ let gameOver = false;
 // Score variables
 let score = 0;
 let bestScore = localStorage.getItem("bestScore") || 0;
+
+const dashLength = 20; // Length of each dash
+const gapLength = 30; // Length of the gap between dashes
+const totalSegmentLength = dashLength + gapLength; // Total length of one dash + gap
 
 // Police properties
 const police = [
@@ -199,12 +204,15 @@ document.getElementById("kickButton").addEventListener("click", () => {
 
 	// Perform the kick functionality
 	for (let i = 0; i < police.length; i++) {
-		if (police[i].isActive && !police[i].attachedToCar) {
+		if (police[i].isActive) {
 			const dx = bike.x - police[i].x;
 			const dy = bike.y - police[i].y;
 			const distance = Math.sqrt(dx * dx + dy * dy);
 
 			if (distance < 100) {
+				// Detach from car if attached
+				police[i].attachedToCar = false;
+				police[i].attachedCarIndex = -1;
 				police[i].isKicked = true;
 				const oppositeDirectionX = -dx / distance;
 				const oppositeDirectionY = -dy / distance;
@@ -227,6 +235,14 @@ document.getElementById("kickButton").addEventListener("click", () => {
 function update() {
 	if (gameOver) return;
 
+	// Move the dashed line downward
+	lineOffset += obstacleSpeed + 2; // Move the line upward at the same speed as the obstacles
+	if (lineOffset >= totalSegmentLength) {
+		// Reset the offset to create a seamless loop
+		lineOffset = 0;
+	}
+
+	// Rest of the update function remains the same...
 	// Move bike based on joystick direction or keyboard input
 	if (joystickDirection.x !== 0 || joystickDirection.y !== 0) {
 		bike.velocityX = joystickDirection.x * bike.speed;
@@ -265,19 +281,19 @@ function update() {
 
 		// Remove obstacles that are off-screen and increment score
 		if (obstacles[i].y > canvas.height) {
-			score += 10;
-
-			// Check if any police were attached to this obstacle
+			// Update police attachedCarIndex before removing the obstacle
 			for (let p = 0; p < police.length; p++) {
 				if (police[p].attachedCarIndex === i) {
 					police[p].isActive = false;
 					police[p].attachedToCar = false;
 					police[p].attachedCarIndex = -1;
 					score += 25; // Bonus points for police going off screen
+				} else if (police[p].attachedCarIndex > i) {
+					police[p].attachedCarIndex--; // Adjust indices
 				}
 			}
-
 			obstacles.splice(i, 1);
+			score += 10;
 			continue;
 		}
 
@@ -394,6 +410,21 @@ function render() {
 	// Clear canvas
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+	// Draw the moving dashed vertical line in the middle of the canvas
+	ctx.beginPath();
+	ctx.setLineDash([dashLength, gapLength]); // Set the dash pattern (dashLength, gapLength)
+	ctx.strokeStyle = "white"; // Set the line color
+	ctx.lineWidth = 4; // Set the line width
+
+	// Draw multiple segments of the dashed line to cover the entire canvas height
+	for (let y = lineOffset; y < canvas.height; y += totalSegmentLength) {
+		ctx.moveTo(canvas.width / 2, y); // Start at the middle of the canvas
+		ctx.lineTo(canvas.width / 2, y + dashLength); // Draw a dash of the specified length
+	}
+
+	ctx.stroke(); // Render the line
+	ctx.setLineDash([]); // Reset the dash pattern for other drawings
+
 	// Draw bike
 	ctx.drawImage(playerImage, bike.x, bike.y, bike.width, bike.height);
 
@@ -467,7 +498,6 @@ function render() {
 	ctx.fillText(`Score : ${score}`, 10, 30);
 	ctx.fillText(`Best Score : ${bestScore}`, 10, 60);
 }
-
 // Game loop
 function gameLoop() {
 	update();
