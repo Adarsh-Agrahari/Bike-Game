@@ -26,6 +26,20 @@ canvas.height = canvasHeight;
 // Load images
 const playerImage = new Image();
 playerImage.src = "player.png";
+let playerAspectRatio = 1;
+
+const playerKicking1Image = new Image();
+playerKicking1Image.src = "playerkicking1.png";
+let playerKicking1AspectRatio = 1;
+
+const playerKicking2Image = new Image();
+playerKicking2Image.src = "playerkicking2.png";
+let playerKicking2AspectRatio = 1;
+
+// Center offset variables
+let playerCenterOffsetX = 0;
+let playerKicking1CenterOffsetX = 0;
+let playerKicking2CenterOffsetX = 0;
 
 const carImages = [new Image(), new Image(), new Image()];
 carImages[0].src = "car1.png";
@@ -37,13 +51,16 @@ policeImage.src = "police.png";
 
 // Bike properties
 const bike = {
-	x: canvas.width / 2 - 25,
+	x: canvas.width / 2,
 	y: canvas.height - 100,
 	width: 50 * (canvasWidth / 600),
 	height: 90 * (canvasWidth / 600),
 	speed: 5,
 	velocityX: 0,
 	velocityY: 0,
+	currentImage: playerImage,
+	currentAspectRatio: 1,
+	currentCenterOffsetX: 0,
 };
 
 // Game state variables
@@ -206,6 +223,26 @@ document.getElementById("kickButton").addEventListener("click", () => {
 	const kickButton = document.getElementById("kickButton");
 	kickButton.classList.add("disabled");
 
+	// Start kick animation with center-point adjustments
+	bike.currentImage = playerKicking1Image;
+	bike.currentAspectRatio = playerKicking1AspectRatio;
+	bike.currentCenterOffsetX = playerKicking1CenterOffsetX;
+	bike.width = bike.height * playerKicking1AspectRatio;
+
+	setTimeout(() => {
+		bike.currentImage = playerKicking2Image;
+		bike.currentAspectRatio = playerKicking2AspectRatio;
+		bike.currentCenterOffsetX = playerKicking2CenterOffsetX;
+		bike.width = bike.height * playerKicking2AspectRatio;
+	}, 300);
+
+	setTimeout(() => {
+		bike.currentImage = playerImage;
+		bike.currentAspectRatio = playerAspectRatio;
+		bike.currentCenterOffsetX = playerCenterOffsetX;
+		bike.width = bike.height * playerAspectRatio;
+	}, 600);
+
 	for (let i = 0; i < police.length; i++) {
 		if (police[i].isActive) {
 			const dx = bike.x - police[i].x;
@@ -229,7 +266,7 @@ document.getElementById("kickButton").addEventListener("click", () => {
 	setTimeout(() => {
 		kickButtonCooldown = false;
 		kickButton.classList.remove("disabled");
-	}, 1000);
+	}, 1200);
 });
 
 // Update game state
@@ -393,7 +430,7 @@ function update() {
 	frameCount++;
 }
 
-// Render game
+// Render game with centered images
 function render() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -411,8 +448,9 @@ function render() {
 	ctx.stroke();
 	ctx.setLineDash([]);
 
-	// Draw bike
-	ctx.drawImage(playerImage, bike.x, bike.y, bike.width, bike.height);
+	// Draw bike with center point adjustment
+	const drawX = bike.x + (playerCenterOffsetX - bike.currentCenterOffsetX);
+	ctx.drawImage(bike.currentImage, drawX, bike.y, bike.width, bike.height);
 
 	// Draw obstacles
 	for (const obstacle of obstacles) {
@@ -429,7 +467,6 @@ function render() {
 	for (let i = 0; i < police.length; i++) {
 		if (police[i].isActive) {
 			ctx.save();
-
 			if (police[i].attachedToCar) {
 				ctx.translate(
 					police[i].x + police[i].width / 2,
@@ -451,7 +488,6 @@ function render() {
 					police[i].height
 				);
 			}
-
 			ctx.restore();
 		}
 	}
@@ -482,33 +518,60 @@ function render() {
 	ctx.fillText(`Best Score: ${bestScore}`, 10, 60);
 }
 
-// Game loop
-function gameLoop() {
-	update();
-	render();
-	if (!gameOver) requestAnimationFrame(gameLoop);
-}
-
 // Function to reset game state
 function resetGame() {
 	gameOver = false;
 	obstacles.length = 0;
 	frameCount = 0;
 	score = 0;
-	obstacleSpeed = INITIAL_OBSTACLE_SPEED; // Reset to initial speed
-	obstacleSpawnRate = INITIAL_SPAWN_RATE; // Reset to initial spawn rate
-	police[0].isActive = false;
-	police[0].speed = 1; // Reset police speed
-	police[1].isActive = false;
-	police[1].speed = 1; // Reset police speed
-	bike.x = canvas.width / 2 - 25;
+	obstacleSpeed = INITIAL_OBSTACLE_SPEED;
+	obstacleSpawnRate = INITIAL_SPAWN_RATE;
+
+	// Reset police
+	for (let i = 0; i < police.length; i++) {
+		police[i].isActive = false;
+		police[i].speed = 1;
+	}
+
+	// Reset bike with centered position
+	bike.x = canvas.width / 2 - playerCenterOffsetX;
 	bike.y = canvas.height - 100;
+	bike.currentImage = playerImage;
+	bike.currentAspectRatio = playerAspectRatio;
+	bike.currentCenterOffsetX = playerCenterOffsetX;
+	bike.width = bike.height * playerAspectRatio;
 }
 
 // Start the game after images are loaded
 Promise.all([
 	new Promise((resolve) => {
-		playerImage.onload = resolve;
+		playerImage.onload = () => {
+			playerAspectRatio = playerImage.width / playerImage.height;
+			const baseWidth = 90 * (canvasWidth / 600) * playerAspectRatio;
+			playerCenterOffsetX = baseWidth / 2;
+			bike.currentCenterOffsetX = playerCenterOffsetX;
+			resolve();
+		};
+	}),
+	new Promise((resolve) => {
+		playerKicking1Image.onload = () => {
+			playerKicking1AspectRatio =
+				playerKicking1Image.width / playerKicking1Image.height;
+			const kickWidth =
+				90 * (canvasWidth / 600) * playerKicking1AspectRatio;
+			playerKicking1CenterOffsetX = kickWidth / 2;
+			resolve();
+		};
+	}),
+	new Promise((resolve) => {
+		playerKicking2Image.onload = () => {
+			playerKicking2AspectRatio =
+				playerKicking2Image.width / playerKicking2Image.height;
+			const kick2Width =
+				90 * (canvasWidth / 600) * playerKicking2AspectRatio;
+			playerKicking2CenterOffsetX = kick2Width / 2;
+			resolve();
+		};
 	}),
 	...carImages.map(
 		(img) =>
@@ -520,6 +583,8 @@ Promise.all([
 		policeImage.onload = resolve;
 	}),
 ]).then(() => {
+	// Initialize bike position using the center offset
+	bike.x = canvas.width / 2 - playerCenterOffsetX;
 	document.getElementById("playButton").style.display = "block";
 });
 
@@ -541,9 +606,22 @@ window.addEventListener("resize", () => {
 	canvas.height = canvasHeight;
 
 	// Adjust game elements
-	bike.width = 50 * (canvasWidth / 600);
 	bike.height = 90 * (canvasWidth / 600);
-	bike.x = canvas.width / 2 - 25;
+	bike.width = bike.height * bike.currentAspectRatio;
+
+	// Update center offsets based on new canvas size
+	playerCenterOffsetX = (bike.height * playerAspectRatio) / 2;
+	playerKicking1CenterOffsetX = (bike.height * playerKicking1AspectRatio) / 2;
+	playerKicking2CenterOffsetX = (bike.height * playerKicking2AspectRatio) / 2;
+	bike.currentCenterOffsetX =
+		bike.currentImage === playerImage
+			? playerCenterOffsetX
+			: bike.currentImage === playerKicking1Image
+			? playerKicking1CenterOffsetX
+			: playerKicking2CenterOffsetX;
+
+	// Update bike position
+	bike.x = canvas.width / 2 - bike.currentCenterOffsetX;
 	bike.y = canvas.height - 100;
 
 	// Update joystick
@@ -594,8 +672,15 @@ document.addEventListener("fullscreenchange", () => {
 		setTimeout(() => {
 			canvas.width = canvasWidth;
 			canvas.height = canvasHeight;
-			bike.x = canvas.width / 2 - 25;
+			bike.x = canvas.width / 2 - bike.currentCenterOffsetX;
 			bike.y = canvas.height - 100;
 		}, 100);
 	}
 });
+
+// Game loop
+function gameLoop() {
+	update();
+	render();
+	if (!gameOver) requestAnimationFrame(gameLoop);
+}
