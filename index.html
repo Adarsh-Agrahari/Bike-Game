@@ -12,10 +12,26 @@
   <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     <button id="playButton" class="game-button">Play Game</button>
+    <button id="rulesButton" class="game-button">Rules</button>
     <button id="restartButton" class="game-button">Restart</button>
     <button id="fullScreenButton" class="full-screen-button">⛶</button>
     <button id="kickButton" class="kick-button">👊</button>
+
+    <!-- Move rules screen inside gameContainer -->
+    <div id="rulesScreen" class="rules-screen">
+      <div class="rules-content">
+        <h2>~ Game Rules ~</h2>
+        <li>🚴 Control bike with joystick</li>
+        <li>⚠️ Avoid moving cars & chasing police</li>
+        <li>👮 Kick police for +50 score</li>
+        <li>💨 Game speeds up over time</li>
+        <li>🔥 Difficulty increases with score</li>
+        <li>💥 Accidents end the game!</li>
+        <button id="closeRulesButton" class="close-rules-button">×</button>
+      </div>
+    </div>
   </div>
+
   <script src="game.js"></script>
 </body>
 

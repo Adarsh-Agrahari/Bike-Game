@@ -1,6 +1,11 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// Get the rules screen and buttons
+const rulesScreen = document.getElementById("rulesScreen");
+const rulesButton = document.getElementById("rulesButton");
+const closeRulesButton = document.getElementById("closeRulesButton");
+
 // Audio Manager
 const AudioManager = {
 	// Background Music
@@ -458,6 +463,8 @@ function update() {
 			AudioManager.bgMusic.pause();
 			AudioManager.policeAppearSound.pause();
 			document.getElementById("restartButton").style.display = "block";
+			document.getElementById("rulesButton").style.display = "block";
+			document.getElementById("playButton").style.display = "none";
 			if (score > bestScore) {
 				bestScore = score;
 				localStorage.setItem("bestScore", bestScore);
@@ -542,6 +549,8 @@ function update() {
 					AudioManager.policeAppearSound.pause();
 					AudioManager.bgMusic.pause();
 					document.getElementById("restartButton").style.display =
+						"block";
+					document.getElementById("rulesButton").style.display =
 						"block";
 					if (score > bestScore) {
 						bestScore = score;
@@ -721,12 +730,14 @@ Promise.all([
 	// Initialize bike position using the center offset
 	bike.x = canvas.width / 2 - playerCenterOffsetX;
 	document.getElementById("playButton").style.display = "block";
+	document.getElementById("rulesButton").style.display = "block";
 });
 
 // Event listeners for buttons
 document.getElementById("playButton").addEventListener("click", () => {
 	document.getElementById("playButton").style.display = "none";
 	document.getElementById("restartButton").style.display = "none";
+	document.getElementById("rulesButton").style.display = "none";
 	resetGame();
 	AudioManager.playBgMusic();
 	gameLoop();
@@ -734,8 +745,24 @@ document.getElementById("playButton").addEventListener("click", () => {
 
 document.getElementById("restartButton").addEventListener("click", () => {
 	document.getElementById("restartButton").style.display = "none";
+	document.getElementById("rulesButton").style.display = "none";
+	document.getElementById("playButton").style.display = "none";
 	resetGame();
 	gameLoop();
+});
+
+// Show rules screen when rules button is clicked
+rulesButton.addEventListener("click", () => {
+	rulesScreen.style.display = "flex";
+	rulesButton.style.display = "none";
+	playButton.style.display = "none";
+});
+
+// Hide rules screen when close button is clicked
+closeRulesButton.addEventListener("click", () => {
+	rulesScreen.style.display = "none";
+	rulesButton.style.display = "block";
+	playButton.style.display = "block";
 });
 
 // Handle window resize
