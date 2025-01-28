@@ -145,15 +145,15 @@ canvas.height = canvasHeight;
 
 // Load images
 const playerImage = new Image();
-playerImage.src = "player.png";
+playerImage.src = "img/player.png";
 let playerAspectRatio = 1;
 
 const playerKicking1Image = new Image();
-playerKicking1Image.src = "playerkicking1.png";
+playerKicking1Image.src = "img/playerkicking1.png";
 let playerKicking1AspectRatio = 1;
 
 const playerKicking2Image = new Image();
-playerKicking2Image.src = "playerkicking2.png";
+playerKicking2Image.src = "img/playerkicking2.png";
 let playerKicking2AspectRatio = 1;
 
 // Center offset variables
@@ -162,12 +162,12 @@ let playerKicking1CenterOffsetX = 0;
 let playerKicking2CenterOffsetX = 0;
 
 const carImages = [new Image(), new Image(), new Image()];
-carImages[0].src = "car1.png";
-carImages[1].src = "car2.png";
-carImages[2].src = "car3.png";
+carImages[0].src = "img/car1.png";
+carImages[1].src = "img/car2.png";
+carImages[2].src = "img/car3.png";
 
 const policeImage = new Image();
-policeImage.src = "police.png";
+policeImage.src = "img/police.png";
 
 // Bike properties
 const bike = {
