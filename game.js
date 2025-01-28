@@ -10,6 +10,8 @@ const AudioManager = {
 	kickSound: new Audio("audio/kick.mp3"),
 	collisionSound: new Audio("audio/collision.mp3"),
 	scoreSound: new Audio("audio/score.mp3"),
+	policeAppearSound: new Audio("audio/police_appear.mp3"), // New sound
+	policeCollisionSound: new Audio("audio/police_collision.mp3"), // New sound
 
 	// Initialize audio settings
 	init() {
@@ -21,6 +23,8 @@ const AudioManager = {
 		this.kickSound.volume = 0.6;
 		this.collisionSound.volume = 0.6;
 		this.scoreSound.volume = 0.5;
+		this.policeAppearSound.volume = 0.2; // New volume setting
+		this.policeCollisionSound.volume = 0.6; // New volume setting
 
 		// Add mute button functionality
 		const muteButton = document.createElement("button");
@@ -69,11 +73,29 @@ const AudioManager = {
 		});
 	},
 
+	// New method for police appear sound
+	playPoliceAppearSound() {
+		this.policeAppearSound.currentTime = 0;
+		this.policeAppearSound.play().catch((error) => {
+			console.log("Couldn't play police appear sound:", error);
+		});
+	},
+
+	// New method for police collision sound
+	playPoliceCollisionSound() {
+		this.policeCollisionSound.currentTime = 0;
+		this.policeCollisionSound.play().catch((error) => {
+			console.log("Couldn't play police collision sound:", error);
+		});
+	},
+
 	setMute(isMuted) {
 		this.bgMusic.muted = isMuted;
 		this.kickSound.muted = isMuted;
 		this.collisionSound.muted = isMuted;
 		this.scoreSound.muted = isMuted;
+		this.policeAppearSound.muted = isMuted; // Add to mute list
+		this.policeCollisionSound.muted = isMuted; // Add to mute list
 	},
 
 	stopAll() {
@@ -85,9 +107,12 @@ const AudioManager = {
 		this.collisionSound.currentTime = 0;
 		this.scoreSound.pause();
 		this.scoreSound.currentTime = 0;
+		this.policeAppearSound.pause(); // Add to stop list
+		this.policeAppearSound.currentTime = 0;
+		this.policeCollisionSound.pause(); // Add to stop list
+		this.policeCollisionSound.currentTime = 0;
 	},
 };
-
 // Initialize audio
 AudioManager.init();
 
@@ -431,6 +456,7 @@ function update() {
 			gameOver = true;
 			AudioManager.playCollisionSound();
 			AudioManager.bgMusic.pause();
+			AudioManager.policeAppearSound.pause();
 			document.getElementById("restartButton").style.display = "block";
 			if (score > bestScore) {
 				bestScore = score;
@@ -444,6 +470,7 @@ function update() {
 		police[0].isActive = true;
 		police[0].x = Math.random() * (canvas.width - police[0].width);
 		police[0].y = canvas.height;
+		AudioManager.playPoliceAppearSound(); // Add sound when police appears
 	}
 
 	if (score >= 50) {
@@ -454,6 +481,7 @@ function update() {
 		police[1].isActive = true;
 		police[1].x = Math.random() * (canvas.width - police[1].width);
 		police[1].y = canvas.height;
+		AudioManager.playPoliceAppearSound(); // Add sound when second police appears
 	}
 
 	// Update police positions
@@ -495,7 +523,7 @@ function update() {
 
 				for (let j = 0; j < obstacles.length; j++) {
 					if (checkCollision(police[i], obstacles[j])) {
-						AudioManager.playCollisionSound();
+						AudioManager.playPoliceCollisionSound(); // Change to police collision sound
 						police[i].attachedToCar = true;
 						police[i].attachedCarIndex = j;
 						police[i].x = obstacles[j].x;
@@ -509,7 +537,9 @@ function update() {
 					checkCollision(bike, police[i])
 				) {
 					gameOver = true;
-					AudioManager.playCollisionSound();
+					AudioManager.playPoliceCollisionSound(); // Change to police collision sound
+
+					AudioManager.policeAppearSound.pause();
 					AudioManager.bgMusic.pause();
 					document.getElementById("restartButton").style.display =
 						"block";
