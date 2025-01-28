@@ -1,6 +1,96 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// Audio Manager
+const AudioManager = {
+	// Background Music
+	bgMusic: new Audio("audio/background.mp3"),
+
+	// Sound Effects
+	kickSound: new Audio("audio/kick.mp3"),
+	collisionSound: new Audio("audio/collision.mp3"),
+	scoreSound: new Audio("audio/score.mp3"),
+
+	// Initialize audio settings
+	init() {
+		// Set background music to loop
+		this.bgMusic.loop = true;
+
+		// Set volumes
+		this.bgMusic.volume = 0.3;
+		this.kickSound.volume = 0.6;
+		this.collisionSound.volume = 0.6;
+		this.scoreSound.volume = 0.5;
+
+		// Add mute button functionality
+		const muteButton = document.createElement("button");
+		muteButton.id = "muteButton";
+		muteButton.className = "game-button mute-button";
+		muteButton.innerHTML = "🔊";
+		muteButton.style.position = "absolute";
+		muteButton.style.top = "20px";
+		muteButton.style.left = "20px";
+		document.getElementById("gameContainer").appendChild(muteButton);
+
+		let isMuted = false;
+		muteButton.addEventListener("click", () => {
+			isMuted = !isMuted;
+			muteButton.innerHTML = isMuted ? "🔇" : "🔊";
+			this.setMute(isMuted);
+		});
+	},
+
+	playBgMusic() {
+		this.bgMusic.play().catch((error) => {
+			console.log(
+				"Audio autoplay was prevented. Click to start the game first."
+			);
+		});
+	},
+
+	playKickSound() {
+		this.kickSound.currentTime = 0;
+		this.kickSound.play().catch((error) => {
+			console.log("Couldn't play kick sound:", error);
+		});
+	},
+
+	playCollisionSound() {
+		this.collisionSound.currentTime = 0;
+		this.collisionSound.play().catch((error) => {
+			console.log("Couldn't play collision sound:", error);
+		});
+	},
+
+	playScoreSound() {
+		this.scoreSound.currentTime = 0;
+		this.scoreSound.play().catch((error) => {
+			console.log("Couldn't play score sound:", error);
+		});
+	},
+
+	setMute(isMuted) {
+		this.bgMusic.muted = isMuted;
+		this.kickSound.muted = isMuted;
+		this.collisionSound.muted = isMuted;
+		this.scoreSound.muted = isMuted;
+	},
+
+	stopAll() {
+		this.bgMusic.pause();
+		this.bgMusic.currentTime = 0;
+		this.kickSound.pause();
+		this.kickSound.currentTime = 0;
+		this.collisionSound.pause();
+		this.collisionSound.currentTime = 0;
+		this.scoreSound.pause();
+		this.scoreSound.currentTime = 0;
+	},
+};
+
+// Initialize audio
+AudioManager.init();
+
 // Initial game settings
 const INITIAL_OBSTACLE_SPEED = 3;
 const INITIAL_SPAWN_RATE = 200;
@@ -223,6 +313,9 @@ document.getElementById("kickButton").addEventListener("click", () => {
 	const kickButton = document.getElementById("kickButton");
 	kickButton.classList.add("disabled");
 
+	// Play kick sound
+	AudioManager.playKickSound();
+
 	// Start kick animation with center-point adjustments
 	bike.currentImage = playerKicking1Image;
 	bike.currentAspectRatio = playerKicking1AspectRatio;
@@ -259,6 +352,7 @@ document.getElementById("kickButton").addEventListener("click", () => {
 				police[i].kickVelocityX = oppositeDirectionX * kickSpeed;
 				police[i].kickVelocityY = oppositeDirectionY * kickSpeed;
 				score += 50;
+				AudioManager.playScoreSound();
 			}
 		}
 	}
@@ -322,17 +416,21 @@ function update() {
 					police[p].attachedToCar = false;
 					police[p].attachedCarIndex = -1;
 					score += 25;
+					AudioManager.playScoreSound();
 				} else if (police[p].attachedCarIndex > i) {
 					police[p].attachedCarIndex--;
 				}
 			}
 			obstacles.splice(i, 1);
 			score += 10;
+			AudioManager.playScoreSound();
 			continue;
 		}
 
 		if (checkCollision(bike, obstacles[i])) {
 			gameOver = true;
+			AudioManager.playCollisionSound();
+			AudioManager.bgMusic.pause();
 			document.getElementById("restartButton").style.display = "block";
 			if (score > bestScore) {
 				bestScore = score;
@@ -397,6 +495,7 @@ function update() {
 
 				for (let j = 0; j < obstacles.length; j++) {
 					if (checkCollision(police[i], obstacles[j])) {
+						AudioManager.playCollisionSound();
 						police[i].attachedToCar = true;
 						police[i].attachedCarIndex = j;
 						police[i].x = obstacles[j].x;
@@ -410,6 +509,8 @@ function update() {
 					checkCollision(bike, police[i])
 				) {
 					gameOver = true;
+					AudioManager.playCollisionSound();
+					AudioManager.bgMusic.pause();
 					document.getElementById("restartButton").style.display =
 						"block";
 					if (score > bestScore) {
@@ -540,6 +641,10 @@ function resetGame() {
 	bike.currentAspectRatio = playerAspectRatio;
 	bike.currentCenterOffsetX = playerCenterOffsetX;
 	bike.width = bike.height * playerAspectRatio;
+
+	// Reset audio
+	AudioManager.stopAll();
+	AudioManager.playBgMusic();
 }
 
 // Start the game after images are loaded
@@ -586,6 +691,21 @@ Promise.all([
 	// Initialize bike position using the center offset
 	bike.x = canvas.width / 2 - playerCenterOffsetX;
 	document.getElementById("playButton").style.display = "block";
+});
+
+// Event listeners for buttons
+document.getElementById("playButton").addEventListener("click", () => {
+	document.getElementById("playButton").style.display = "none";
+	document.getElementById("restartButton").style.display = "none";
+	resetGame();
+	AudioManager.playBgMusic();
+	gameLoop();
+});
+
+document.getElementById("restartButton").addEventListener("click", () => {
+	document.getElementById("restartButton").style.display = "none";
+	resetGame();
+	gameLoop();
 });
 
 // Handle window resize
@@ -637,20 +757,6 @@ window.addEventListener("resize", () => {
 		police[i].width = 50 * (canvasWidth / 600);
 		police[i].height = 90 * (canvasWidth / 600);
 	}
-});
-
-// Event listeners for buttons
-document.getElementById("playButton").addEventListener("click", () => {
-	document.getElementById("playButton").style.display = "none";
-	document.getElementById("restartButton").style.display = "none";
-	resetGame();
-	gameLoop();
-});
-
-document.getElementById("restartButton").addEventListener("click", () => {
-	document.getElementById("restartButton").style.display = "none";
-	resetGame();
-	gameLoop();
 });
 
 // Full-screen functionality
