@@ -256,51 +256,117 @@ function getCanvasPosition() {
 	};
 }
 
-// Handle touch events for the joystick
+// Handle multiple touch events
 canvas.addEventListener("touchstart", (e) => {
-	const touch = e.touches[0];
 	const canvasPos = getCanvasPosition();
-	const touchX = touch.clientX - canvasPos.left;
-	const touchY = touch.clientY - canvasPos.top;
+	Array.from(e.touches).forEach((touch) => {
+		const touchX = touch.clientX - canvasPos.left;
+		const touchY = touch.clientY - canvasPos.top;
 
-	const dx = touchX - joystick.x;
-	const dy = touchY - joystick.y;
-	if (Math.sqrt(dx * dx + dy * dy) < joystick.radius) {
-		joystick.isDragging = true;
-	}
+		// Check if touch is on the joystick
+		const dx = touchX - joystick.x;
+		const dy = touchY - joystick.y;
+		if (Math.sqrt(dx * dx + dy * dy) < joystick.radius) {
+			joystick.isDragging = true;
+			joystick.knob.x = touchX;
+			joystick.knob.y = touchY;
+		}
+	});
 });
 
 canvas.addEventListener("touchmove", (e) => {
-	if (!joystick.isDragging) return;
-
-	const touch = e.touches[0];
 	const canvasPos = getCanvasPosition();
-	const touchX = touch.clientX - canvasPos.left;
-	const touchY = touch.clientY - canvasPos.top;
+	Array.from(e.touches).forEach((touch) => {
+		const touchX = touch.clientX - canvasPos.left;
+		const touchY = touch.clientY - canvasPos.top;
 
-	const dx = touchX - joystick.x;
-	const dy = touchY - joystick.y;
-	const distance = Math.sqrt(dx * dx + dy * dy);
-	const maxDistance = joystick.radius;
+		if (joystick.isDragging) {
+			const dx = touchX - joystick.x;
+			const dy = touchY - joystick.y;
+			const distance = Math.sqrt(dx * dx + dy * dy);
+			const maxDistance = joystick.radius;
 
-	if (distance > maxDistance) {
-		const angle = Math.atan2(dy, dx);
-		joystick.knob.x = joystick.x + maxDistance * Math.cos(angle);
-		joystick.knob.y = joystick.y + maxDistance * Math.sin(angle);
-	} else {
-		joystick.knob.x = touchX;
-		joystick.knob.y = touchY;
-	}
+			if (distance > maxDistance) {
+				const angle = Math.atan2(dy, dx);
+				joystick.knob.x = joystick.x + maxDistance * Math.cos(angle);
+				joystick.knob.y = joystick.y + maxDistance * Math.sin(angle);
+			} else {
+				joystick.knob.x = touchX;
+				joystick.knob.y = touchY;
+			}
 
-	joystickDirection.x = (joystick.knob.x - joystick.x) / maxDistance;
-	joystickDirection.y = (joystick.knob.y - joystick.y) / maxDistance;
+			joystickDirection.x = (joystick.knob.x - joystick.x) / maxDistance;
+			joystickDirection.y = (joystick.knob.y - joystick.y) / maxDistance;
+		}
+	});
 });
 
-canvas.addEventListener("touchend", () => {
+canvas.addEventListener("touchend", (e) => {
 	joystick.isDragging = false;
 	joystick.knob.x = joystick.x;
 	joystick.knob.y = joystick.y;
 	joystickDirection = { x: 0, y: 0 };
+});
+
+// Kick button multitouch support
+document.getElementById("kickButton").addEventListener("touchstart", (e) => {
+	e.preventDefault(); // Prevent conflict with joystick touches
+	if (gameOver || kickButtonCooldown) return;
+
+	kickButtonCooldown = true;
+	const kickButton = document.getElementById("kickButton");
+	kickButton.classList.add("disabled");
+
+	// Play kick sound
+	AudioManager.playKickSound();
+
+	// Start kick animation with center-point adjustments
+	bike.currentImage = playerKicking1Image;
+	bike.currentAspectRatio = playerKicking1AspectRatio;
+	bike.currentCenterOffsetX = playerKicking1CenterOffsetX;
+	bike.width = bike.height * playerKicking1AspectRatio;
+
+	setTimeout(() => {
+		bike.currentImage = playerKicking2Image;
+		bike.currentAspectRatio = playerKicking2AspectRatio;
+		bike.currentCenterOffsetX = playerKicking2CenterOffsetX;
+		bike.width = bike.height * playerKicking2AspectRatio;
+	}, 300);
+
+	setTimeout(() => {
+		bike.currentImage = playerImage;
+		bike.currentAspectRatio = playerAspectRatio;
+		bike.currentCenterOffsetX = playerCenterOffsetX;
+		bike.width = bike.height * playerAspectRatio;
+	}, 600);
+
+	// Handle kicking logic for nearby police
+	for (let i = 0; i < police.length; i++) {
+		if (police[i].isActive) {
+			const dx = bike.x - police[i].x;
+			const dy = bike.y - police[i].y;
+			const distance = Math.sqrt(dx * dx + dy * dy);
+
+			if (distance < 100) {
+				police[i].attachedToCar = false;
+				police[i].attachedCarIndex = -1;
+				police[i].isKicked = true;
+				const oppositeDirectionX = -dx / distance;
+				const oppositeDirectionY = -dy / distance;
+				const kickSpeed = 15;
+				police[i].kickVelocityX = oppositeDirectionX * kickSpeed;
+				police[i].kickVelocityY = oppositeDirectionY * kickSpeed;
+				score += 50;
+				AudioManager.playScoreSound();
+			}
+		}
+	}
+
+	// Reset cooldown
+	setTimeout(() => {
+		kickButtonCooldown = false;
+		kickButton.classList.remove("disabled");
+	}, 1200);
 });
 
 // Keyboard controls
