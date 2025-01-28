@@ -575,18 +575,23 @@ function render() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// Draw dashed line
+	ctx.save();
 	ctx.beginPath();
 	ctx.setLineDash([dashLength, gapLength]);
+	ctx.lineDashOffset = -lineOffset; // Smooth scrolling with offset
 	ctx.strokeStyle = "white";
-	ctx.lineWidth = 4;
+	ctx.lineWidth = 6; // Slightly thicker line
+	ctx.shadowColor = "rgba(255, 255, 255, 0.4)"; // Glow effect
+	ctx.shadowBlur = 15;
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 0;
 
-	for (let y = lineOffset; y < canvas.height; y += totalSegmentLength) {
-		ctx.moveTo(canvas.width / 2, y);
-		ctx.lineTo(canvas.width / 2, y + dashLength);
-	}
-
+	// Single continuous vertical line
+	ctx.moveTo(canvas.width / 2, 0);
+	ctx.lineTo(canvas.width / 2, canvas.height);
 	ctx.stroke();
-	ctx.setLineDash([]);
+
+	ctx.restore();
 
 	// Draw bike with center point adjustment
 	const drawX = bike.x + (playerCenterOffsetX - bike.currentCenterOffsetX);
