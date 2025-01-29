@@ -24,11 +24,11 @@ const AudioManager = {
 		this.bgMusic.loop = true;
 
 		// Set volumes
-		this.bgMusic.volume = 0.3;
+		this.bgMusic.volume = 0.1;
 		this.kickSound.volume = 0.6;
 		this.collisionSound.volume = 0.6;
 		this.scoreSound.volume = 0.5;
-		this.policeAppearSound.volume = 0.2; // New volume setting
+		this.policeAppearSound.volume = 0.8; // New volume setting
 		this.policeCollisionSound.volume = 0.6; // New volume setting
 
 		// Add mute button functionality
@@ -636,7 +636,14 @@ function update() {
 	frameCount++;
 }
 
-// Render game with centered images
+// Add police lights animation state
+const policeLights = {
+	isBlue: true,
+	lastToggle: 0,
+	toggleInterval: 500, // Toggle every 500ms
+};
+
+// Update the render function to include police lights
 function render() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -644,15 +651,14 @@ function render() {
 	ctx.save();
 	ctx.beginPath();
 	ctx.setLineDash([dashLength, gapLength]);
-	ctx.lineDashOffset = -lineOffset; // Smooth scrolling with offset
+	ctx.lineDashOffset = -lineOffset;
 	ctx.strokeStyle = "white";
-	ctx.lineWidth = 6; // Slightly thicker line
-	ctx.shadowColor = "rgba(255, 255, 255, 0.4)"; // Glow effect
+	ctx.lineWidth = 6;
+	ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
 	ctx.shadowBlur = 15;
 	ctx.shadowOffsetX = 0;
 	ctx.shadowOffsetY = 0;
 
-	// Single continuous vertical line
 	ctx.moveTo(canvas.width / 2, 0);
 	ctx.lineTo(canvas.width / 2, canvas.height);
 	ctx.stroke();
@@ -674,7 +680,14 @@ function render() {
 		);
 	}
 
-	// Draw police
+	// Update police lights state
+	const currentTime = Date.now();
+	if (currentTime - policeLights.lastToggle > policeLights.toggleInterval) {
+		policeLights.isBlue = !policeLights.isBlue;
+		policeLights.lastToggle = currentTime;
+	}
+
+	// Draw police with lights
 	for (let i = 0; i < police.length; i++) {
 		if (police[i].isActive) {
 			ctx.save();
@@ -690,6 +703,20 @@ function render() {
 					police[i].width,
 					police[i].height
 				);
+
+				// Draw blinking semi-circle light
+				const lightRadius = police[i].width * 0.15;
+				ctx.beginPath();
+				ctx.arc(
+					0,
+					police[i].height / 2 + lightRadius,
+					lightRadius,
+					0,
+					Math.PI
+				);
+				ctx.fillStyle = policeLights.isBlue ? "#0066ff" : "#ff0000";
+				ctx.fill();
+				ctx.closePath();
 			} else {
 				ctx.drawImage(
 					policeImage,
@@ -698,6 +725,20 @@ function render() {
 					police[i].width,
 					police[i].height
 				);
+
+				// Draw blinking semi-circle light for non-attached police
+				const lightRadius = police[i].width * 0.15;
+				ctx.beginPath();
+				ctx.arc(
+					police[i].x + police[i].width / 2,
+					police[i].y + police[i].height + lightRadius,
+					lightRadius,
+					0,
+					Math.PI
+				);
+				ctx.fillStyle = policeLights.isBlue ? "#0066ff" : "#ff0000";
+				ctx.fill();
+				ctx.closePath();
 			}
 			ctx.restore();
 		}
