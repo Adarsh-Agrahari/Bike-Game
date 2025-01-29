@@ -106,6 +106,8 @@ canvas {
 
 .sound-toggle-button {
   background: transparent;
+  border: 0px solid rgba(255, 255, 255, 0.3);
+  color: white;
   font-size: 22px;
   cursor: pointer;
   padding: 5px 10px;
