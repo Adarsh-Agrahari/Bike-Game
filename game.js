@@ -30,23 +30,6 @@ const AudioManager = {
 		this.scoreSound.volume = 0.5;
 		this.policeAppearSound.volume = 0.8; // New volume setting
 		this.policeCollisionSound.volume = 0.6; // New volume setting
-
-		// Add mute button functionality
-		const muteButton = document.createElement("button");
-		muteButton.id = "muteButton";
-		muteButton.className = "game-button mute-button";
-		muteButton.innerHTML = "🔊";
-		muteButton.style.position = "absolute";
-		muteButton.style.top = "20px";
-		muteButton.style.left = "20px";
-		document.getElementById("gameContainer").appendChild(muteButton);
-
-		let isMuted = false;
-		muteButton.addEventListener("click", () => {
-			isMuted = !isMuted;
-			muteButton.innerHTML = isMuted ? "🔇" : "🔊";
-			this.setMute(isMuted);
-		});
 	},
 
 	playBgMusic() {
@@ -644,6 +627,52 @@ function update() {
 
 	frameCount++;
 }
+
+// Sound Control Panel functionality
+document.addEventListener("DOMContentLoaded", () => {
+	const soundToggleButton = document.getElementById("soundToggleButton");
+	const volumeControls = document.getElementById("volumeControls");
+
+	// Toggle volume controls visibility
+	soundToggleButton.addEventListener("click", () => {
+		const isVisible = volumeControls.style.display === "block";
+		volumeControls.style.display = isVisible ? "none" : "block";
+		soundToggleButton.textContent = isVisible ? "🔊" : "🔇";
+	});
+
+	// Volume control event listeners
+	const volumeInputs = {
+		bgMusicVolume: AudioManager.bgMusic,
+		kickVolume: AudioManager.kickSound,
+		collisionVolume: AudioManager.collisionSound,
+		scoreVolume: AudioManager.scoreSound,
+		policeAppearVolume: AudioManager.policeAppearSound,
+		policeCollisionVolume: AudioManager.policeCollisionSound,
+	};
+
+	// Set initial values
+	Object.entries(volumeInputs).forEach(([inputId, audio]) => {
+		const input = document.getElementById(inputId);
+		input.value = audio.volume;
+
+		// Add change listener
+		input.addEventListener("input", (e) => {
+			audio.volume = e.target.value;
+
+			// Save to localStorage
+			localStorage.setItem(inputId, e.target.value);
+		});
+	});
+
+	// Load saved volumes from localStorage
+	Object.entries(volumeInputs).forEach(([inputId, audio]) => {
+		const savedVolume = localStorage.getItem(inputId);
+		if (savedVolume !== null) {
+			audio.volume = savedVolume;
+			document.getElementById(inputId).value = savedVolume;
+		}
+	});
+});
 
 // Add police lights animation state
 const policeLights = {

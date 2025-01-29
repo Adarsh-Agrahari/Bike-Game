@@ -11,13 +11,46 @@
 <body>
   <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
+
+    <!-- Main Game Controls -->
     <button id="playButton" class="game-button">Play Game</button>
     <button id="rulesButton" class="game-button">Rules</button>
     <button id="restartButton" class="game-button">Restart</button>
     <button id="fullScreenButton" class="full-screen-button">⛶</button>
     <button id="kickButton" class="kick-button">👊</button>
 
-    <!-- Move rules screen inside gameContainer -->
+    <!-- Sound Control Panel -->
+    <div id="soundControlPanel" class="sound-control-panel">
+      <button id="soundToggleButton" class="sound-toggle-button">🔊</button>
+      <div id="volumeControls" class="volume-controls">
+        <div class="volume-control">
+          <label>Background Music</label>
+          <input type="range" id="bgMusicVolume" min="0" max="1" step="0.1" value="0.1">
+        </div>
+        <div class="volume-control">
+          <label>Kick Sound</label>
+          <input type="range" id="kickVolume" min="0" max="1" step="0.1" value="0.6">
+        </div>
+        <div class="volume-control">
+          <label>Collision Sound</label>
+          <input type="range" id="collisionVolume" min="0" max="1" step="0.1" value="0.6">
+        </div>
+        <div class="volume-control">
+          <label>Score Sound</label>
+          <input type="range" id="scoreVolume" min="0" max="1" step="0.1" value="0.5">
+        </div>
+        <div class="volume-control">
+          <label>Police Appear</label>
+          <input type="range" id="policeAppearVolume" min="0" max="1" step="0.1" value="0.8">
+        </div>
+        <div class="volume-control">
+          <label>Police Collision</label>
+          <input type="range" id="policeCollisionVolume" min="0" max="1" step="0.1" value="0.6">
+        </div>
+      </div>
+    </div>
+
+    <!-- Rules Screen -->
     <div id="rulesScreen" class="rules-screen">
       <div class="rules-content">
         <h2>~ Game Rules ~</h2>
@@ -28,6 +61,7 @@
         <li>💥 Accidents end the game!</li>
         <li>👮 Kick police when they are close, this will gain +50 score</li>
         <li>👊 Once you kicked, wait for cooldown period of 1 second to kick again</li>
+        <li>🔊 Adjust game sounds using the volume controls</li>
         <button id="closeRulesButton" class="close-rules-button">×</button>
       </div>
     </div>
