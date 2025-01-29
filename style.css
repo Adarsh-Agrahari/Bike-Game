@@ -100,7 +100,7 @@ canvas {
 .sound-control-panel {
   position: absolute;
   top: 20px;
-  left: 80px;
+  right: 80px;
   z-index: 1000;
 }
 
@@ -127,7 +127,7 @@ canvas {
   border-radius: 10px;
   position: absolute;
   top: 45px;
-  left: 0;
+  right: 0;
   width: 240px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(5px);
@@ -151,7 +151,6 @@ canvas {
 
 .volume-control input[type="range"] {
   width: 100%;
-  -webkit-appearance: none;
   height: 4px;
   background: #4CAF50;
   border-radius: 2px;
