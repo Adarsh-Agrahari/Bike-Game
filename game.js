@@ -6,6 +6,11 @@ const rulesScreen = document.getElementById("rulesScreen");
 const rulesButton = document.getElementById("rulesButton");
 const closeRulesButton = document.getElementById("closeRulesButton");
 
+// Get the leaderboard elements
+const leaderboardScreen = document.getElementById("leaderboardFormScreen");
+const leaderboardForm = document.getElementById("leaderboardForm");
+const closeLeaderboardForm = document.getElementById("closeLeaderboardForm");
+
 // Audio Manager
 const AudioManager = {
 	// Background Music
@@ -15,8 +20,8 @@ const AudioManager = {
 	kickSound: new Audio("audio/kick.mp3"),
 	collisionSound: new Audio("audio/collision.mp3"),
 	scoreSound: new Audio("audio/score.mp3"),
-	policeAppearSound: new Audio("audio/police_appear.mp3"), // New sound
-	policeCollisionSound: new Audio("audio/police_collision.mp3"), // New sound
+	policeAppearSound: new Audio("audio/police_appear.mp3"),
+	policeCollisionSound: new Audio("audio/police_collision.mp3"),
 
 	// Initialize audio settings
 	init() {
@@ -28,8 +33,8 @@ const AudioManager = {
 		this.kickSound.volume = 0.6;
 		this.collisionSound.volume = 0.6;
 		this.scoreSound.volume = 0.5;
-		this.policeAppearSound.volume = 0.8; // New volume setting
-		this.policeCollisionSound.volume = 0.6; // New volume setting
+		this.policeAppearSound.volume = 0.8;
+		this.policeCollisionSound.volume = 0.6;
 	},
 
 	playBgMusic() {
@@ -61,7 +66,6 @@ const AudioManager = {
 		});
 	},
 
-	// New method for police appear sound
 	playPoliceAppearSound() {
 		this.policeAppearSound.currentTime = 0;
 		this.policeAppearSound.play().catch((error) => {
@@ -69,7 +73,6 @@ const AudioManager = {
 		});
 	},
 
-	// New method for police collision sound
 	playPoliceCollisionSound() {
 		this.policeCollisionSound.currentTime = 0;
 		this.policeCollisionSound.play().catch((error) => {
@@ -82,8 +85,8 @@ const AudioManager = {
 		this.kickSound.muted = isMuted;
 		this.collisionSound.muted = isMuted;
 		this.scoreSound.muted = isMuted;
-		this.policeAppearSound.muted = isMuted; // Add to mute list
-		this.policeCollisionSound.muted = isMuted; // Add to mute list
+		this.policeAppearSound.muted = isMuted;
+		this.policeCollisionSound.muted = isMuted;
 	},
 
 	stopAll() {
@@ -95,12 +98,13 @@ const AudioManager = {
 		this.collisionSound.currentTime = 0;
 		this.scoreSound.pause();
 		this.scoreSound.currentTime = 0;
-		this.policeAppearSound.pause(); // Add to stop list
+		this.policeAppearSound.pause();
 		this.policeAppearSound.currentTime = 0;
-		this.policeCollisionSound.pause(); // Add to stop list
+		this.policeCollisionSound.pause();
 		this.policeCollisionSound.currentTime = 0;
 	},
 };
+
 // Initialize audio
 AudioManager.init();
 
@@ -158,8 +162,8 @@ const bike = {
 	y: canvas.height - 100,
 	width: 50 * (canvasWidth / 600),
 	height: 90 * (canvasWidth / 600),
-	baseSpeed: 5, // Base speed that will be used after 50 points
-	currentSpeed: 2.5, // Starting speed (half of base speed)
+	baseSpeed: 5,
+	currentSpeed: 2.5,
 	velocityX: 0,
 	velocityY: 0,
 	currentImage: playerImage,
@@ -240,6 +244,66 @@ function getCanvasPosition() {
 	};
 }
 
+// Add event listeners for the leaderboard form
+document.getElementById("leaderboardButton").addEventListener("click", () => {
+	leaderboardScreen.style.display = "flex";
+});
+
+closeLeaderboardForm.addEventListener("click", () => {
+	leaderboardScreen.style.display = "none";
+});
+
+leaderboardForm.addEventListener("submit", async (e) => {
+	e.preventDefault();
+
+	const formData = {
+		firstName: document.getElementById("firstName").value,
+		lastName: document.getElementById("lastName").value,
+		email: document.getElementById("email").value,
+		score: score,
+	};
+
+	try {
+		const response = await fetch("YOUR_BACKEND_API_URL/leaderboard", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(formData),
+		});
+
+		if (response.ok) {
+			alert("Score submitted successfully!");
+			leaderboardScreen.style.display = "none";
+		} else {
+			alert("Failed to submit score. Please try again.");
+		}
+	} catch (error) {
+		console.error("Error submitting score:", error);
+		alert("Error submitting score. Please try again.");
+	}
+});
+
+// Function to show game over buttons
+function showGameOverButtons() {
+	document.getElementById("restartButton").style.display = "block";
+	document.getElementById("rulesButton").style.display = "block";
+	document.getElementById("leaderboardButton").style.display = "block";
+}
+
+// Function to handle game over
+function handleGameOver() {
+	gameOver = true;
+	AudioManager.playCollisionSound();
+	AudioManager.bgMusic.pause();
+	AudioManager.policeAppearSound.pause();
+	showGameOverButtons();
+	if (score > bestScore) {
+		bestScore = score;
+		localStorage.setItem("bestScore", bestScore);
+	}
+}
+
 // Handle multiple touch events
 canvas.addEventListener("touchstart", (e) => {
 	const canvasPos = getCanvasPosition();
@@ -294,63 +358,10 @@ canvas.addEventListener("touchend", (e) => {
 
 // Kick button multitouch support
 document.getElementById("kickButton").addEventListener("touchstart", (e) => {
-	e.preventDefault(); // Prevent conflict with joystick touches
+	e.preventDefault();
 	if (gameOver || kickButtonCooldown) return;
 
-	kickButtonCooldown = true;
-	const kickButton = document.getElementById("kickButton");
-	kickButton.classList.add("disabled");
-
-	// Play kick sound
-	AudioManager.playKickSound();
-
-	// Start kick animation with center-point adjustments
-	bike.currentImage = playerKicking1Image;
-	bike.currentAspectRatio = playerKicking1AspectRatio;
-	bike.currentCenterOffsetX = playerKicking1CenterOffsetX;
-	bike.width = bike.height * playerKicking1AspectRatio;
-
-	setTimeout(() => {
-		bike.currentImage = playerKicking2Image;
-		bike.currentAspectRatio = playerKicking2AspectRatio;
-		bike.currentCenterOffsetX = playerKicking2CenterOffsetX;
-		bike.width = bike.height * playerKicking2AspectRatio;
-	}, 300);
-
-	setTimeout(() => {
-		bike.currentImage = playerImage;
-		bike.currentAspectRatio = playerAspectRatio;
-		bike.currentCenterOffsetX = playerCenterOffsetX;
-		bike.width = bike.height * playerAspectRatio;
-	}, 600);
-
-	// Handle kicking logic for nearby police
-	for (let i = 0; i < police.length; i++) {
-		if (police[i].isActive) {
-			const dx = bike.x - police[i].x;
-			const dy = bike.y - police[i].y;
-			const distance = Math.sqrt(dx * dx + dy * dy);
-
-			if (distance < 100) {
-				police[i].attachedToCar = false;
-				police[i].attachedCarIndex = -1;
-				police[i].isKicked = true;
-				const oppositeDirectionX = -dx / distance;
-				const oppositeDirectionY = -dy / distance;
-				const kickSpeed = 15;
-				police[i].kickVelocityX = oppositeDirectionX * kickSpeed;
-				police[i].kickVelocityY = oppositeDirectionY * kickSpeed;
-				score += 50;
-				AudioManager.playScoreSound();
-			}
-		}
-	}
-
-	// Reset cooldown
-	setTimeout(() => {
-		kickButtonCooldown = false;
-		kickButton.classList.remove("disabled");
-	}, 1200);
+	performKickAction();
 });
 
 // Keyboard controls
@@ -386,17 +397,15 @@ function checkCollision(obj1, obj2) {
 // Add kick functionality with cooldown
 let kickButtonCooldown = false;
 
-document.getElementById("kickButton").addEventListener("click", () => {
+function performKickAction() {
 	if (gameOver || kickButtonCooldown) return;
 
 	kickButtonCooldown = true;
 	const kickButton = document.getElementById("kickButton");
 	kickButton.classList.add("disabled");
 
-	// Play kick sound
 	AudioManager.playKickSound();
 
-	// Start kick animation with center-point adjustments
 	bike.currentImage = playerKicking1Image;
 	bike.currentAspectRatio = playerKicking1AspectRatio;
 	bike.currentCenterOffsetX = playerKicking1CenterOffsetX;
@@ -441,7 +450,11 @@ document.getElementById("kickButton").addEventListener("click", () => {
 		kickButtonCooldown = false;
 		kickButton.classList.remove("disabled");
 	}, 1200);
-});
+}
+
+document
+	.getElementById("kickButton")
+	.addEventListener("click", performKickAction);
 
 // Update game state
 function update() {
@@ -449,7 +462,6 @@ function update() {
 
 	// Update bike speed based on score
 	if (score < 50) {
-		// Gradually increase speed as score increases
 		bike.currentSpeed = bike.baseSpeed * (0.5 + (score / 50) * 0.5);
 	} else {
 		bike.currentSpeed = bike.baseSpeed;
@@ -516,17 +528,8 @@ function update() {
 		}
 
 		if (checkCollision(bike, obstacles[i])) {
-			gameOver = true;
-			AudioManager.playCollisionSound();
-			AudioManager.bgMusic.pause();
-			AudioManager.policeAppearSound.pause();
-			document.getElementById("restartButton").style.display = "block";
-			document.getElementById("rulesButton").style.display = "block";
-			document.getElementById("playButton").style.display = "none";
-			if (score > bestScore) {
-				bestScore = score;
-				localStorage.setItem("bestScore", bestScore);
-			}
+			handleGameOver();
+			break;
 		}
 	}
 
@@ -535,7 +538,7 @@ function update() {
 		police[0].isActive = true;
 		police[0].x = Math.random() * (canvas.width - police[0].width);
 		police[0].y = canvas.height;
-		AudioManager.playPoliceAppearSound(); // Add sound when police appears
+		AudioManager.playPoliceAppearSound();
 	}
 
 	if (score >= 50) {
@@ -546,7 +549,7 @@ function update() {
 		police[1].isActive = true;
 		police[1].x = Math.random() * (canvas.width - police[1].width);
 		police[1].y = canvas.height;
-		AudioManager.playPoliceAppearSound(); // Add sound when second police appears
+		AudioManager.playPoliceAppearSound();
 	}
 
 	// Update police positions
@@ -588,7 +591,7 @@ function update() {
 
 				for (let j = 0; j < obstacles.length; j++) {
 					if (checkCollision(police[i], obstacles[j])) {
-						AudioManager.playPoliceCollisionSound(); // Change to police collision sound
+						AudioManager.playPoliceCollisionSound();
 						police[i].attachedToCar = true;
 						police[i].attachedCarIndex = j;
 						police[i].x = obstacles[j].x;
@@ -601,19 +604,7 @@ function update() {
 					!police[i].attachedToCar &&
 					checkCollision(bike, police[i])
 				) {
-					gameOver = true;
-					AudioManager.playPoliceCollisionSound(); // Change to police collision sound
-
-					AudioManager.policeAppearSound.pause();
-					AudioManager.bgMusic.pause();
-					document.getElementById("restartButton").style.display =
-						"block";
-					document.getElementById("rulesButton").style.display =
-						"block";
-					if (score > bestScore) {
-						bestScore = score;
-						localStorage.setItem("bestScore", bestScore);
-					}
+					handleGameOver();
 				}
 			}
 		}
@@ -628,60 +619,14 @@ function update() {
 	frameCount++;
 }
 
-// Sound Control Panel functionality
-document.addEventListener("DOMContentLoaded", () => {
-	const soundToggleButton = document.getElementById("soundToggleButton");
-	const volumeControls = document.getElementById("volumeControls");
-
-	// Toggle volume controls visibility
-	soundToggleButton.addEventListener("click", () => {
-		const isVisible = volumeControls.style.display === "block";
-		volumeControls.style.display = isVisible ? "none" : "block";
-		soundToggleButton.textContent = isVisible ? "🔊" : "🔇";
-	});
-
-	// Volume control event listeners
-	const volumeInputs = {
-		bgMusicVolume: AudioManager.bgMusic,
-		kickVolume: AudioManager.kickSound,
-		collisionVolume: AudioManager.collisionSound,
-		scoreVolume: AudioManager.scoreSound,
-		policeAppearVolume: AudioManager.policeAppearSound,
-		policeCollisionVolume: AudioManager.policeCollisionSound,
-	};
-
-	// Set initial values
-	Object.entries(volumeInputs).forEach(([inputId, audio]) => {
-		const input = document.getElementById(inputId);
-		input.value = audio.volume;
-
-		// Add change listener
-		input.addEventListener("input", (e) => {
-			audio.volume = e.target.value;
-
-			// Save to localStorage
-			localStorage.setItem(inputId, e.target.value);
-		});
-	});
-
-	// Load saved volumes from localStorage
-	Object.entries(volumeInputs).forEach(([inputId, audio]) => {
-		const savedVolume = localStorage.getItem(inputId);
-		if (savedVolume !== null) {
-			audio.volume = savedVolume;
-			document.getElementById(inputId).value = savedVolume;
-		}
-	});
-});
-
-// Add police lights animation state
+// Police lights animation state
 const policeLights = {
 	isBlue: true,
 	lastToggle: 0,
-	toggleInterval: 500, // Toggle every 500ms
+	toggleInterval: 500,
 };
 
-// Update the render function to include police lights
+// Render function
 function render() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -816,7 +761,7 @@ function resetGame() {
 	score = 0;
 	obstacleSpeed = INITIAL_OBSTACLE_SPEED;
 	obstacleSpawnRate = INITIAL_SPAWN_RATE;
-	bike.currentSpeed = bike.baseSpeed * 0.5; // Reset to starting speed
+	bike.currentSpeed = bike.baseSpeed * 0.5;
 
 	// Reset police
 	for (let i = 0; i < police.length; i++) {
@@ -824,7 +769,7 @@ function resetGame() {
 		police[i].speed = 1;
 	}
 
-	// Reset bike with centered position
+	// Reset bike position
 	bike.x = canvas.width / 2 - playerCenterOffsetX;
 	bike.y = canvas.height - 100;
 	bike.currentImage = playerImage;
@@ -878,7 +823,6 @@ Promise.all([
 		policeImage.onload = resolve;
 	}),
 ]).then(() => {
-	// Initialize bike position using the center offset
 	bike.x = canvas.width / 2 - playerCenterOffsetX;
 	document.getElementById("playButton").style.display = "block";
 	document.getElementById("rulesButton").style.display = "block";
@@ -889,6 +833,7 @@ document.getElementById("playButton").addEventListener("click", () => {
 	document.getElementById("playButton").style.display = "none";
 	document.getElementById("restartButton").style.display = "none";
 	document.getElementById("rulesButton").style.display = "none";
+	document.getElementById("leaderboardButton").style.display = "none";
 	resetGame();
 	AudioManager.playBgMusic();
 	gameLoop();
@@ -897,6 +842,7 @@ document.getElementById("playButton").addEventListener("click", () => {
 document.getElementById("restartButton").addEventListener("click", () => {
 	document.getElementById("restartButton").style.display = "none";
 	document.getElementById("rulesButton").style.display = "none";
+	document.getElementById("leaderboardButton").style.display = "none";
 	document.getElementById("playButton").style.display = "none";
 	resetGame();
 	gameLoop();
@@ -990,6 +936,49 @@ document.addEventListener("fullscreenchange", () => {
 			bike.y = canvas.height - 100;
 		}, 100);
 	}
+});
+
+// Sound Control Panel functionality
+document.addEventListener("DOMContentLoaded", () => {
+	const soundToggleButton = document.getElementById("soundToggleButton");
+	const volumeControls = document.getElementById("volumeControls");
+
+	// Toggle volume controls visibility
+	soundToggleButton.addEventListener("click", () => {
+		const isVisible = volumeControls.style.display === "block";
+		volumeControls.style.display = isVisible ? "none" : "block";
+		soundToggleButton.textContent = isVisible ? "🔊" : "🔇";
+	});
+
+	// Volume control event listeners
+	const volumeInputs = {
+		bgMusicVolume: AudioManager.bgMusic,
+		kickVolume: AudioManager.kickSound,
+		collisionVolume: AudioManager.collisionSound,
+		scoreVolume: AudioManager.scoreSound,
+		policeAppearVolume: AudioManager.policeAppearSound,
+		policeCollisionVolume: AudioManager.policeCollisionSound,
+	};
+
+	// Set initial values and add listeners
+	Object.entries(volumeInputs).forEach(([inputId, audio]) => {
+		const input = document.getElementById(inputId);
+		input.value = audio.volume;
+
+		input.addEventListener("input", (e) => {
+			audio.volume = e.target.value;
+			localStorage.setItem(inputId, e.target.value);
+		});
+	});
+
+	// Load saved volumes from localStorage
+	Object.entries(volumeInputs).forEach(([inputId, audio]) => {
+		const savedVolume = localStorage.getItem(inputId);
+		if (savedVolume !== null) {
+			audio.volume = savedVolume;
+			document.getElementById(inputId).value = savedVolume;
+		}
+	});
 });
 
 // Game loop

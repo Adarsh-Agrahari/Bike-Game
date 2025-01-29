@@ -16,6 +16,7 @@
     <button id="playButton" class="game-button">Play Game</button>
     <button id="rulesButton" class="game-button">Rules</button>
     <button id="restartButton" class="game-button">Restart</button>
+    <button id="leaderboardButton" class="game-button">Send your score to our leaderboard</button>
     <button id="fullScreenButton" class="full-screen-button">⛶</button>
     <button id="kickButton" class="kick-button">👊</button>
 
@@ -63,6 +64,29 @@
         <li>👊 Once you kicked, wait for cooldown period of 1 second to kick again</li>
         <li>🔊 Adjust game sounds using the volume controls</li>
         <button id="closeRulesButton" class="close-rules-button">×</button>
+      </div>
+    </div>
+
+    <!-- Add this to index.html inside the gameContainer div -->
+    <div id="leaderboardFormScreen" class="leaderboard-screen">
+      <div class="leaderboard-content">
+        <h2>Submit Your Score</h2>
+        <form id="leaderboardForm">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" required>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required>
+          </div>
+          <button type="submit" class="submit-button">Submit Score</button>
+          <button type="button" class="close-form-button" id="closeLeaderboardForm">Cancel</button>
+        </form>
       </div>
     </div>
   </div>
