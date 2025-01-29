@@ -264,7 +264,7 @@ leaderboardForm.addEventListener("submit", async (e) => {
 	};
 
 	try {
-		const response = await fetch("YOUR_BACKEND_API_URL/leaderboard", {
+		const response = await fetch("https://backend.podiumpe.com/v2/road-rash/add", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
