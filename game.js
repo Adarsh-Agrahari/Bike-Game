@@ -175,7 +175,8 @@ const bike = {
 	y: canvas.height - 100,
 	width: 50 * (canvasWidth / 600),
 	height: 90 * (canvasWidth / 600),
-	speed: 5,
+	baseSpeed: 5, // Base speed that will be used after 50 points
+	currentSpeed: 2.5, // Starting speed (half of base speed)
 	velocityX: 0,
 	velocityY: 0,
 	currentImage: playerImage,
@@ -463,23 +464,31 @@ document.getElementById("kickButton").addEventListener("click", () => {
 function update() {
 	if (gameOver) return;
 
+	// Update bike speed based on score
+	if (score < 50) {
+		// Gradually increase speed as score increases
+		bike.currentSpeed = bike.baseSpeed * (0.5 + (score / 50) * 0.5);
+	} else {
+		bike.currentSpeed = bike.baseSpeed;
+	}
+
 	// Move the dashed line downward
 	lineOffset += obstacleSpeed + 2;
 	if (lineOffset >= totalSegmentLength) {
 		lineOffset = 0;
 	}
 
-	// Move bike based on joystick direction or keyboard input
+	// Move bike based on joystick direction or keyboard input with current speed
 	if (joystickDirection.x !== 0 || joystickDirection.y !== 0) {
-		bike.velocityX = joystickDirection.x * bike.speed;
-		bike.velocityY = joystickDirection.y * bike.speed;
+		bike.velocityX = joystickDirection.x * bike.currentSpeed;
+		bike.velocityY = joystickDirection.y * bike.currentSpeed;
 	} else {
 		bike.velocityX = 0;
 		bike.velocityY = 0;
-		if (keys.ArrowLeft) bike.velocityX = -bike.speed;
-		if (keys.ArrowRight) bike.velocityX = bike.speed;
-		if (keys.ArrowUp) bike.velocityY = -bike.speed;
-		if (keys.ArrowDown) bike.velocityY = bike.speed;
+		if (keys.ArrowLeft) bike.velocityX = -bike.currentSpeed;
+		if (keys.ArrowRight) bike.velocityX = bike.currentSpeed;
+		if (keys.ArrowUp) bike.velocityY = -bike.currentSpeed;
+		if (keys.ArrowDown) bike.velocityY = bike.currentSpeed;
 	}
 
 	bike.x += bike.velocityX;
@@ -778,6 +787,7 @@ function resetGame() {
 	score = 0;
 	obstacleSpeed = INITIAL_OBSTACLE_SPEED;
 	obstacleSpawnRate = INITIAL_SPAWN_RATE;
+	bike.currentSpeed = bike.baseSpeed * 0.5; // Reset to starting speed
 
 	// Reset police
 	for (let i = 0; i < police.length; i++) {
